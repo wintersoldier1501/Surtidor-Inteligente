@@ -182,85 +182,77 @@ export default function App() {
     }));
   };
 
-  // Handler: Sync photos directly from https://catalogos-accesorios.web.app without CORS issues
-  const handleSyncCatalogPhotos = () => {
-    return new Promise((resolve) => {
-      try {
-        const scriptId = 'online-catalog-script-' + Date.now();
-        const script = document.createElement('script');
-        script.id = scriptId;
-        script.src = `https://catalogos-accesorios.web.app/public/data/products_data.js?v=${Date.now()}`;
+  // Handler: Sync photos directly from live Firestore database & online web catalog
+  const handleSyncCatalogPhotos = async () => {
+    try {
+      const onlineMap = {};
 
-        const processData = (onlineList) => {
-          const onlineMap = {};
-          onlineList.forEach(item => {
-            const code = String(item.code || '').trim().toUpperCase();
-            const img = item.image;
-            if (code && img) {
-              const url = img.startsWith('http') ? img : `https://catalogos-accesorios.web.app/${img}`;
-              onlineMap[code] = url;
-            }
-          });
-
-          let newPhotosCount = 0;
-          products.forEach(p => {
-            const skuUpper = String(p.sku || '').trim().toUpperCase();
-            const baseSku = skuUpper.split('-')[0];
-            const targetUrl = onlineMap[skuUpper] || onlineMap[baseSku];
-            if (targetUrl && (!p.imagen || p.imagen !== targetUrl)) {
-              newPhotosCount++;
-            }
-          });
-
-          setProducts(prev => prev.map(p => {
-            const skuUpper = String(p.sku || '').trim().toUpperCase();
-            const baseSku = skuUpper.split('-')[0];
-
-            const targetUrl = onlineMap[skuUpper] || onlineMap[baseSku];
-            if (targetUrl) {
-              if (!p.imagen || p.imagen !== targetUrl) {
-                return { ...p, imagen: targetUrl };
-              }
-            }
-            return p;
-          }));
-
-          resolve({ count: newPhotosCount });
-        };
-
-        script.onload = () => {
-          if (window.PRODUCTS_DATA && Array.isArray(window.PRODUCTS_DATA)) {
-            processData(window.PRODUCTS_DATA);
-          } else {
-            resolve({ count: 0, error: 'No se encontraron datos en el catálogo web.' });
+      // 1. Fetch live products from catalogos-accesorizate Firestore API (Real-time database)
+      let pageToken = '';
+      const baseUrl = 'https://firestore.googleapis.com/v1/projects/catalogos-accesorizate/databases/(default)/documents/products?pageSize=300';
+      
+      while (true) {
+        const url = baseUrl + (pageToken ? `&pageToken=${pageToken}` : '');
+        const res = await fetch(url);
+        if (!res.ok) break;
+        const data = await res.json();
+        const docs = data.documents || [];
+        
+        docs.forEach(doc => {
+          const fields = doc.fields || {};
+          const code = (fields.code?.stringValue || fields.sku?.stringValue || '').trim().toUpperCase();
+          const img = fields.image?.stringValue || fields.imagen?.stringValue || fields.images?.arrayValue?.values?.[0]?.stringValue || '';
+          if (code && img) {
+            const fullUrl = img.startsWith('http') ? img : `https://catalogos-accesorios.web.app/${img}`;
+            onlineMap[code] = fullUrl;
           }
-          try { document.head.removeChild(script); } catch (e) {}
-        };
+        });
 
-        script.onerror = () => {
-          // Fallback via CORS proxy if direct script load is blocked
-          fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent('https://catalogos-accesorios.web.app/public/data/products_data.js'))
-            .then(res => res.text())
-            .then(text => {
-              const match = text.match(/window\.PRODUCTS_DATA\s*=\s*(\[[\s\S]*?\]);/);
-              if (match) {
-                const onlineList = JSON.parse(match[1]);
-                processData(onlineList);
-              } else {
-                resolve({ count: 0, error: 'No se pudo leer el catálogo web.' });
-              }
-            })
-            .catch(() => {
-              resolve({ count: 0, error: 'No se pudo conectar con catalogos-accesorios.web.app' });
-            });
-        };
-
-        document.head.appendChild(script);
-      } catch (err) {
-        console.error('Error syncing online photos:', err);
-        resolve({ count: 0, error: 'Error al sincronizar.' });
+        pageToken = data.nextPageToken || '';
+        if (!pageToken) break;
       }
-    });
+
+      // 2. Also incorporate static PRODUCTS_DATA if loaded as secondary fallback
+      if (window.PRODUCTS_DATA && Array.isArray(window.PRODUCTS_DATA)) {
+        window.PRODUCTS_DATA.forEach(item => {
+          const code = String(item.code || '').trim().toUpperCase();
+          const img = item.image;
+          if (code && img && !onlineMap[code]) {
+            const url = img.startsWith('http') ? img : `https://catalogos-accesorios.web.app/${img}`;
+            onlineMap[code] = url;
+          }
+        });
+      }
+
+      // 3. Count how many products will get a new or updated photo
+      let newPhotosCount = 0;
+      products.forEach(p => {
+        const skuUpper = String(p.sku || '').trim().toUpperCase();
+        const baseSku = skuUpper.split('-')[0];
+        const targetUrl = onlineMap[skuUpper] || onlineMap[baseSku];
+        if (targetUrl && (!p.imagen || p.imagen !== targetUrl)) {
+          newPhotosCount++;
+        }
+      });
+
+      // 4. Apply updated photos to state
+      setProducts(prev => {
+        return prev.map(p => {
+          const skuUpper = String(p.sku || '').trim().toUpperCase();
+          const baseSku = skuUpper.split('-')[0];
+          const targetUrl = onlineMap[skuUpper] || onlineMap[baseSku];
+          if (targetUrl && (!p.imagen || p.imagen !== targetUrl)) {
+            return { ...p, imagen: targetUrl };
+          }
+          return p;
+        });
+      });
+
+      return { count: newPhotosCount };
+    } catch (e) {
+      console.error('Error syncing photos from Firestore:', e);
+      return { count: 0, error: 'Ocurrió un error al sincronizar con el catálogo en vivo.' };
+    }
   };
 
   // Computed statistics for Navbar
