@@ -202,7 +202,16 @@ export default function App() {
             }
           });
 
-          let updatedCount = 0;
+          let newPhotosCount = 0;
+          products.forEach(p => {
+            const skuUpper = String(p.sku || '').trim().toUpperCase();
+            const baseSku = skuUpper.split('-')[0];
+            const targetUrl = onlineMap[skuUpper] || onlineMap[baseSku];
+            if (targetUrl && (!p.imagen || p.imagen !== targetUrl)) {
+              newPhotosCount++;
+            }
+          });
+
           setProducts(prev => prev.map(p => {
             const skuUpper = String(p.sku || '').trim().toUpperCase();
             const baseSku = skuUpper.split('-')[0];
@@ -210,14 +219,13 @@ export default function App() {
             const targetUrl = onlineMap[skuUpper] || onlineMap[baseSku];
             if (targetUrl) {
               if (!p.imagen || p.imagen !== targetUrl) {
-                updatedCount++;
                 return { ...p, imagen: targetUrl };
               }
             }
             return p;
           }));
 
-          resolve({ count: updatedCount });
+          resolve({ count: newPhotosCount });
         };
 
         script.onload = () => {

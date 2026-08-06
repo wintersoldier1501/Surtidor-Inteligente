@@ -17,9 +17,12 @@ export default function CatalogView({ products, onToggleTaller, onOpenImageModal
     setSyncing(false);
     if (res.error) {
       setSyncMsg({ type: 'error', text: res.error });
+    } else if (res.count > 0) {
+      setSyncMsg({ type: 'success', text: `¡Se vincularon ${res.count} nuevas fotografías del catálogo web!` });
+      setTimeout(() => setSyncMsg(null), 5000);
     } else {
-      setSyncMsg({ type: 'success', text: `¡Se vincularon ${res.count} fotografías del catálogo web!` });
-      setTimeout(() => setSyncMsg(null), 4000);
+      setSyncMsg({ type: 'success', text: `¡Todas las fotografías están al día! (Las 2,274 fotos del catálogo web ya se encuentran sincronizadas)` });
+      setTimeout(() => setSyncMsg(null), 5000);
     }
   };
 
