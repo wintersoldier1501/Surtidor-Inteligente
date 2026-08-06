@@ -125,61 +125,56 @@ export default function App() {
 
   // Handler: Toggle single Taller status
   const handleToggleTaller = (sku) => {
-    setProducts(prev => prev.map(p => {
-      if (p.sku === sku) {
-        return { ...p, esTaller: !p.esTaller };
-      }
-      return p;
-    }));
+    setProducts(prev => {
+      const next = prev.map(p => (p.sku === sku ? { ...p, esTaller: !p.esTaller } : p));
+      pushProductsToCloud(next);
+      return next;
+    });
   };
 
   // Handler: Save product image
   const handleSaveImage = (sku, imageUrl) => {
-    setProducts(prev => prev.map(p => {
-      if (p.sku === sku) {
-        return { ...p, imagen: imageUrl };
-      }
-      return p;
-    }));
+    setProducts(prev => {
+      const next = prev.map(p => (p.sku === sku ? { ...p, imagen: imageUrl } : p));
+      pushProductsToCloud(next);
+      return next;
+    });
   };
 
   // Handler: Update workshop availability & notes
   const handleUpdateWorkshopStatus = (sku, status, nota = '') => {
-    setProducts(prev => prev.map(p => {
-      if (p.sku === sku) {
-        return {
-          ...p,
-          estadoTaller: status, // 'disponible', 'sin_material', 'desactivado'
-          notaTaller: nota
-        };
-      }
-      return p;
-    }));
+    setProducts(prev => {
+      const next = prev.map(p => (p.sku === sku ? { ...p, estadoTaller: status, notaTaller: nota } : p));
+      pushProductsToCloud(next);
+      return next;
+    });
   };
 
   // Handler: Delete single product from catalog
   const handleDeleteProduct = (sku) => {
-    setProducts(prev => prev.filter(p => p.sku !== sku));
+    setProducts(prev => {
+      const next = prev.filter(p => p.sku !== sku);
+      pushProductsToCloud(next);
+      return next;
+    });
   };
 
   // Handler: Toggle No Surtir a Paseo Durango
   const handleToggleNoSurtirPaseo = (sku) => {
-    setProducts(prev => prev.map(p => {
-      if (p.sku === sku) {
-        return { ...p, noSurtirPaseo: !p.noSurtirPaseo };
-      }
-      return p;
-    }));
+    setProducts(prev => {
+      const next = prev.map(p => (p.sku === sku ? { ...p, noSurtirPaseo: !p.noSurtirPaseo } : p));
+      pushProductsToCloud(next);
+      return next;
+    });
   };
 
   // Handler: Toggle General Product Active/Deactivated Status
   const handleToggleDesactivado = (sku) => {
-    setProducts(prev => prev.map(p => {
-      if (p.sku === sku) {
-        return { ...p, desactivado: !p.desactivado };
-      }
-      return p;
-    }));
+    setProducts(prev => {
+      const next = prev.map(p => (p.sku === sku ? { ...p, desactivado: !p.desactivado } : p));
+      pushProductsToCloud(next);
+      return next;
+    });
   };
 
   // Helper function to resolve best photo match according to Sergio's business rules
