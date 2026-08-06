@@ -1,9 +1,16 @@
 import { initializeApp } from 'firebase/app';
-import { getDatabase, ref, onValue, set, update } from 'firebase/database';
+import { getDatabase, ref, onValue, set } from 'firebase/database';
 
+// Sergio's official Firebase Project credentials (surtido-almacen)
 const firebaseConfig = {
-  databaseURL: "https://catalogos-accesorios-default-rtdb.firebaseio.com",
-  projectId: "catalogos-accesorios"
+  apiKey: "AIzaSyARENsoTbMgm-K6jm6qqb9BLyYIE4-w4v4",
+  authDomain: "surtido-almacen.firebaseapp.com",
+  databaseURL: "https://surtido-almacen-default-rtdb.firebaseio.com",
+  projectId: "surtido-almacen",
+  storageBucket: "surtido-almacen.firebasestorage.app",
+  messagingSenderId: "604387811149",
+  appId: "1:604387811149:web:d785270930d3064963e104",
+  measurementId: "G-49VG79TB1C"
 };
 
 // Initialize Firebase

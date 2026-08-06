@@ -3,8 +3,9 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
+  base: './', // Relative base path works on ALL hosts (GitHub Pages, Firebase, Vercel, Local)
   server: {
-    host: true, // Allow external access on local network
+    host: true,
     port: 3000,
     open: true
   }
