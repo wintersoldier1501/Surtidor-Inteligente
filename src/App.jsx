@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import initialData from './data/initialData.json';
 import Navbar from './components/Navbar';
 import RestockDashboard from './components/RestockDashboard';
@@ -6,11 +6,14 @@ import CatalogView from './components/CatalogView';
 import WorkshopView from './components/WorkshopView';
 import ExcelImporter from './components/ExcelImporter';
 import ImageModal from './components/ImageModal';
+import { subscribeToLiveProducts, pushProductsToCloud } from './firebase';
 
 const STORAGE_KEY = 'accesorizate_products_v1';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('surtidor'); // 'surtidor', 'catalogo', 'taller', 'importar'
+  const isRemoteUpdateRef = useRef(false);
+
   const [products, setProducts] = useState(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
@@ -25,12 +28,32 @@ export default function App() {
 
   const [selectedProductForImage, setSelectedProductForImage] = useState(null);
 
-  // Persist products to localStorage when changed
+  // Subscribe to Firebase Realtime updates from other devices
+  useEffect(() => {
+    const unsubscribe = subscribeToLiveProducts((remoteProducts) => {
+      if (remoteProducts && Array.isArray(remoteProducts) && remoteProducts.length > 0) {
+        isRemoteUpdateRef.current = true;
+        setProducts(remoteProducts);
+      }
+    });
+
+    return () => {
+      if (typeof unsubscribe === 'function') unsubscribe();
+    };
+  }, []);
+
+  // Persist products to localStorage and Firebase Cloud when changed
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
     } catch (e) {
       console.error('Error saving data to localStorage:', e);
+    }
+
+    if (isRemoteUpdateRef.current) {
+      isRemoteUpdateRef.current = false;
+    } else {
+      pushProductsToCloud(products);
     }
   }, [products]);
 
