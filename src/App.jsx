@@ -182,6 +182,30 @@ export default function App() {
     }));
   };
 
+  // Helper function to resolve best photo match according to Sergio's business rules
+  const getBestPhotoForSku = (skuUpper, onlineMap) => {
+    // 1. Exact match ALWAYS takes highest priority (e.g., AX1987-P matches AX1987-P)
+    if (onlineMap[skuUpper]) return onlineMap[skuUpper];
+
+    const parts = skuUpper.split('-');
+    if (parts.length > 1) {
+      const baseSku = parts[0];
+      const suffix = parts[1];
+
+      // 2. Color suffixes (-G = Dorado, -P = Plata, -R = Rosa) MUST NOT share photos across colors!
+      const isColorSuffix = ['G', 'P', 'R', 'DORADO', 'PLATA', 'ROSA'].includes(suffix);
+
+      if (!isColorSuffix) {
+        // 3. For sizes (-5, -6, -7, -8) or initials (-A, -B, -C), allow inheriting the base SKU photo
+        if (onlineMap[baseSku]) {
+          return onlineMap[baseSku];
+        }
+      }
+    }
+
+    return null;
+  };
+
   // Handler: Sync photos directly from live Firestore database & online web catalog
   const handleSyncCatalogPhotos = async () => {
     try {
@@ -224,12 +248,11 @@ export default function App() {
         });
       }
 
-      // 3. Count how many products will get a new or updated photo
+      // 3. Count how many products will get a new or updated photo according to variant rules
       let newPhotosCount = 0;
       products.forEach(p => {
         const skuUpper = String(p.sku || '').trim().toUpperCase();
-        const baseSku = skuUpper.split('-')[0];
-        const targetUrl = onlineMap[skuUpper] || onlineMap[baseSku];
+        const targetUrl = getBestPhotoForSku(skuUpper, onlineMap);
         if (targetUrl && (!p.imagen || p.imagen !== targetUrl)) {
           newPhotosCount++;
         }
@@ -239,8 +262,7 @@ export default function App() {
       setProducts(prev => {
         return prev.map(p => {
           const skuUpper = String(p.sku || '').trim().toUpperCase();
-          const baseSku = skuUpper.split('-')[0];
-          const targetUrl = onlineMap[skuUpper] || onlineMap[baseSku];
+          const targetUrl = getBestPhotoForSku(skuUpper, onlineMap);
           if (targetUrl && (!p.imagen || p.imagen !== targetUrl)) {
             return { ...p, imagen: targetUrl };
           }
