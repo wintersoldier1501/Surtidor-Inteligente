@@ -4,14 +4,14 @@ import { Sparkles, Package, Hammer, Upload, Gem, Layers, Warehouse, Lock } from 
 export default function Navbar({ activeTab, setActiveTab, stats, onLock }) {
   return (
     <header className="no-print" style={{ background: '#11131a', borderBottom: '1px solid var(--border-color)', position: 'sticky', top: 0, zIndex: 100 }}>
-      <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
+      <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '14px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '20px' }}>
         
         {/* Brand Logo */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexShrink: 0 }}>
           <div
             style={{
-              width: '48px',
-              height: '48px',
+              width: '44px',
+              height: '44px',
               borderRadius: '50%',
               background: '#ffffff',
               border: '2px solid var(--gold-primary)',
@@ -30,22 +30,22 @@ export default function Navbar({ activeTab, setActiveTab, stats, onLock }) {
             />
           </div>
           <div>
-            <h1 style={{ fontSize: '1.25rem', color: '#fff', letterSpacing: '1px', lineHeight: 1.1 }}>ACCESORIZATE</h1>
-            <span style={{ fontSize: '0.75rem', color: 'var(--gold-primary)', fontWeight: '600', letterSpacing: '0.5px' }}>Surtido Inteligente & Taller</span>
+            <h1 style={{ fontSize: '1.2rem', color: '#fff', letterSpacing: '1px', lineHeight: 1.1 }}>ACCESORIZATE</h1>
+            <span style={{ fontSize: '0.72rem', color: 'var(--gold-primary)', fontWeight: '600', letterSpacing: '0.5px' }}>Surtido Inteligente & Taller</span>
           </div>
         </div>
 
         {/* Navigation Tabs */}
-        <nav style={{ display: 'flex', gap: '8px', background: '#181b24', padding: '6px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
+        <nav style={{ display: 'flex', gap: '6px', background: '#181b24', padding: '5px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', flexShrink: 0 }}>
           <button
             className={`btn ${activeTab === 'surtidor' ? 'btn-gold' : 'btn-outline'}`}
             onClick={() => setActiveTab('surtidor')}
-            style={{ border: activeTab === 'surtidor' ? 'none' : 'transparent' }}
+            style={{ border: activeTab === 'surtidor' ? 'none' : 'transparent', padding: '8px 14px', fontSize: '0.85rem' }}
           >
-            <Warehouse size={18} />
+            <Warehouse size={16} />
             <span>Surtidor entre Almacenes</span>
             {stats.surtirCount > 0 && (
-              <span style={{ background: activeTab === 'surtidor' ? '#0f1117' : 'var(--warning)', color: activeTab === 'surtidor' ? '#fff' : '#0f1117', padding: '2px 7px', borderRadius: '10px', fontSize: '0.75rem', fontWeight: 'bold' }}>
+              <span style={{ background: activeTab === 'surtidor' ? '#0f1117' : 'var(--warning)', color: activeTab === 'surtidor' ? '#fff' : '#0f1117', padding: '2px 6px', borderRadius: '10px', fontSize: '0.7rem', fontWeight: 'bold' }}>
                 {stats.surtirCount}
               </span>
             )}
@@ -54,11 +54,11 @@ export default function Navbar({ activeTab, setActiveTab, stats, onLock }) {
           <button
             className={`btn ${activeTab === 'catalogo' ? 'btn-gold' : 'btn-outline'}`}
             onClick={() => setActiveTab('catalogo')}
-            style={{ border: activeTab === 'catalogo' ? 'none' : 'transparent' }}
+            style={{ border: activeTab === 'catalogo' ? 'none' : 'transparent', padding: '8px 14px', fontSize: '0.85rem' }}
           >
-            <Package size={18} />
+            <Package size={16} />
             <span>Catálogo Maestro</span>
-            <span style={{ background: '#272c3d', color: 'var(--text-muted)', padding: '2px 7px', borderRadius: '10px', fontSize: '0.75rem' }}>
+            <span style={{ background: '#272c3d', color: 'var(--text-muted)', padding: '2px 6px', borderRadius: '10px', fontSize: '0.7rem' }}>
               {stats.totalProducts}
             </span>
           </button>
@@ -66,11 +66,11 @@ export default function Navbar({ activeTab, setActiveTab, stats, onLock }) {
           <button
             className={`btn ${activeTab === 'taller' ? 'btn-gold' : 'btn-outline'}`}
             onClick={() => setActiveTab('taller')}
-            style={{ border: activeTab === 'taller' ? 'none' : 'transparent' }}
+            style={{ border: activeTab === 'taller' ? 'none' : 'transparent', padding: '8px 14px', fontSize: '0.85rem' }}
           >
-            <Hammer size={18} />
+            <Hammer size={16} />
             <span>Taller</span>
-            <span style={{ background: 'var(--purple-bg)', color: '#c084fc', padding: '2px 7px', borderRadius: '10px', fontSize: '0.75rem', fontWeight: 'bold' }}>
+            <span style={{ background: 'var(--purple-bg)', color: '#c084fc', padding: '2px 6px', borderRadius: '10px', fontSize: '0.7rem', fontWeight: 'bold' }}>
               {stats.tallerCount}
             </span>
           </button>
@@ -78,16 +78,16 @@ export default function Navbar({ activeTab, setActiveTab, stats, onLock }) {
           <button
             className={`btn ${activeTab === 'importar' ? 'btn-gold' : 'btn-outline'}`}
             onClick={() => setActiveTab('importar')}
-            style={{ border: activeTab === 'importar' ? 'none' : 'transparent' }}
+            style={{ border: activeTab === 'importar' ? 'none' : 'transparent', padding: '8px 14px', fontSize: '0.85rem' }}
           >
-            <Upload size={18} />
+            <Upload size={16} />
             <span>Cargar Excel</span>
           </button>
         </nav>
 
-        {/* Info Badges */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textAlign: 'right' }}>
+        {/* Info Badges (Always at the far right end) */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexShrink: 0, marginLeft: 'auto' }}>
+          <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', textAlign: 'right', lineHeight: '1.4' }}>
             <div>Sucursal Matriz: <strong style={{ color: '#fff' }}>Vista Hermosa</strong></div>
             <div>Destino Surtido: <strong style={{ color: 'var(--gold-primary)' }}>Paseo Durango</strong></div>
           </div>
