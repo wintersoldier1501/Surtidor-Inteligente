@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Lock, KeyRound, ShieldAlert, ArrowRight } from 'lucide-react';
+import { Lock, ShieldAlert, ArrowRight } from 'lucide-react';
 
 const CORRECT_PIN = '13011';
 
@@ -16,6 +16,12 @@ export default function PinLockModal({ onUnlock }) {
       setPinInput('');
       setTimeout(() => setError(false), 2500);
     }
+  };
+
+  const handleInputChange = (e) => {
+    // Restrict input strictly to numbers only
+    const onlyDigits = e.target.value.replace(/\D/g, '');
+    setPinInput(onlyDigits);
   };
 
   return (
@@ -40,7 +46,7 @@ export default function PinLockModal({ onUnlock }) {
         border: '1px solid rgba(16, 185, 129, 0.3)',
         boxShadow: '0 20px 50px rgba(0, 0, 0, 0.8)'
       }}>
-        {/* Logo or Lock Icon */}
+        {/* Lock Icon */}
         <div style={{
           width: '64px',
           height: '64px',
@@ -59,19 +65,21 @@ export default function PinLockModal({ onUnlock }) {
           ACCESORIZATE
         </h2>
         <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', marginBottom: '24px' }}>
-          Sistema de Surtido Inteligente & Taller. Ingresa el PIN de seguridad autorizado para acceder.
+          Sistema de Surtido Inteligente & Taller.
         </p>
 
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: '20px', position: 'relative' }}>
             <input
               type="password"
+              inputMode="numeric"
+              pattern="[0-9]*"
               className="input-field"
-              placeholder="Ingresa el PIN (ej: 13011)"
+              placeholder="Ingresa el PIN"
               value={pinInput}
-              onChange={(e) => setPinInput(e.target.value)}
+              onChange={handleInputChange}
               autoFocus
-              maxLength={10}
+              maxLength={8}
               style={{
                 fontSize: '1.3rem',
                 textAlign: 'center',
