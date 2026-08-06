@@ -146,6 +146,16 @@ export default function App() {
     }));
   };
 
+  // Handler: Toggle General Product Active/Deactivated Status
+  const handleToggleDesactivado = (sku) => {
+    setProducts(prev => prev.map(p => {
+      if (p.sku === sku) {
+        return { ...p, desactivado: !p.desactivado };
+      }
+      return p;
+    }));
+  };
+
   // Handler: Sync photos directly from https://catalogos-accesorios.web.app without CORS issues
   const handleSyncCatalogPhotos = () => {
     return new Promise((resolve) => {
@@ -242,6 +252,7 @@ export default function App() {
             onOpenImageModal={(prod) => setSelectedProductForImage(prod)}
             onSyncCatalogPhotos={handleSyncCatalogPhotos}
             onToggleNoSurtirPaseo={handleToggleNoSurtirPaseo}
+            onToggleDesactivado={handleToggleDesactivado}
           />
         )}
 
@@ -253,6 +264,7 @@ export default function App() {
             onSyncCatalogPhotos={handleSyncCatalogPhotos}
             onDeleteProduct={handleDeleteProduct}
             onToggleNoSurtirPaseo={handleToggleNoSurtirPaseo}
+            onToggleDesactivado={handleToggleDesactivado}
           />
         )}
 

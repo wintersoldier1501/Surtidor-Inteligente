@@ -1,10 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import { Search, Filter, Hammer, Image as ImageIcon, Edit2, CheckCircle2, XCircle, Trash2 } from 'lucide-react';
 
-export default function CatalogView({ products, onToggleTaller, onOpenImageModal, onSyncCatalogPhotos, onDeleteProduct, onToggleNoSurtirPaseo }) {
+export default function CatalogView({ products, onToggleTaller, onOpenImageModal, onSyncCatalogPhotos, onDeleteProduct, onToggleNoSurtirPaseo, onToggleDesactivado }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('Todas');
   const [tallerFilter, setTallerFilter] = useState('Todos'); // 'Todos', 'SoloTaller', 'NoTaller'
+  const [statusFilter, setStatusFilter] = useState('activos'); // 'activos', 'desactivados', 'todos'
   const [page, setPage] = useState(1);
   const [syncing, setSyncing] = useState(false);
   const [syncMsg, setSyncMsg] = useState(null);
@@ -31,10 +32,14 @@ export default function CatalogView({ products, onToggleTaller, onOpenImageModal
         tallerFilter === 'Todos' ||
         (tallerFilter === 'SoloTaller' && p.esTaller) ||
         (tallerFilter === 'NoTaller' && !p.esTaller);
+      const matchStatus =
+        statusFilter === 'todos' ||
+        (statusFilter === 'activos' && !p.desactivado) ||
+        (statusFilter === 'desactivados' && p.desactivado);
 
-      return matchSearch && matchCat && matchTaller;
+      return matchSearch && matchCat && matchTaller && matchStatus;
     });
-  }, [products, searchQuery, categoryFilter, tallerFilter]);
+  }, [products, searchQuery, categoryFilter, tallerFilter, statusFilter]);
 
   const paginatedProducts = useMemo(() => {
     const start = (page - 1) * pageSize;
@@ -125,6 +130,22 @@ export default function CatalogView({ products, onToggleTaller, onOpenImageModal
             </select>
           </div>
 
+          {/* Status filter */}
+          <div>
+            <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600', display: 'block', marginBottom: '6px' }}>
+              ESTADO EN CATÁLOGO:
+            </label>
+            <select
+              className="input-field"
+              value={statusFilter}
+              onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
+            >
+              <option value="activos">🟢 Solo Activos ({products.filter(p => !p.desactivado).length})</option>
+              <option value="desactivados">🔴 Solo Desactivados ({products.filter(p => p.desactivado).length})</option>
+              <option value="todos">👁️ Mostrar Todos ({products.length})</option>
+            </select>
+          </div>
+
         </div>
       </div>
 
@@ -144,19 +165,20 @@ export default function CatalogView({ products, onToggleTaller, onOpenImageModal
                 <th style={{ padding: '12px 16px', textAlign: 'center' }}>Paseo</th>
                 <th style={{ padding: '12px 16px', textAlign: 'center' }}>Origen / Tipo</th>
                 <th style={{ padding: '12px 16px', textAlign: 'center' }}>Surtir Paseo</th>
+                <th style={{ padding: '12px 16px', textAlign: 'center' }}>Estado</th>
                 <th style={{ padding: '12px 16px', textAlign: 'right' }}>Acción</th>
               </tr>
             </thead>
             <tbody>
               {paginatedProducts.length === 0 ? (
                 <tr>
-                  <td colSpan={10} style={{ textAlign: 'center', padding: '36px', color: 'var(--text-muted)' }}>
+                  <td colSpan={11} style={{ textAlign: 'center', padding: '36px', color: 'var(--text-muted)' }}>
                     No se encontraron productos con los filtros aplicados.
                   </td>
                 </tr>
               ) : (
                 paginatedProducts.map((item) => (
-                  <tr key={item.sku} style={{ borderBottom: '1px solid #1e2330' }}>
+                  <tr key={item.sku} style={{ borderBottom: '1px solid #1e2330', opacity: item.desactivado ? 0.45 : 1 }}>
                     
                     {/* Photo thumbnail */}
                     <td style={{ padding: '12px 16px' }}>
@@ -243,6 +265,18 @@ export default function CatalogView({ products, onToggleTaller, onOpenImageModal
                         title="Hacer clic para activar o desactivar el surtido a Paseo Durango"
                       >
                         {item.noSurtirPaseo ? '🚫 NO SURTIR' : '🟢 SÍ SURTIR'}
+                      </button>
+                    </td>
+
+                    {/* Estado en Catálogo (Activo / Desactivado) */}
+                    <td style={{ padding: '12px 16px', textAlign: 'center' }}>
+                      <button
+                        onClick={() => onToggleDesactivado(item.sku)}
+                        className={`badge ${item.desactivado ? 'badge-danger' : 'badge-surtir'}`}
+                        style={{ cursor: 'pointer', border: 'none' }}
+                        title="Haz clic para activar o desactivar el producto en la tienda"
+                      >
+                        {item.desactivado ? '🔴 DESACTIVADO' : '🟢 ACTIVO'}
                       </button>
                     </td>
 

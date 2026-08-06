@@ -15,6 +15,7 @@ export default function RestockDashboard({ products, onOpenImageModal, onToggleN
 
     // Apply category, search & exclusion filters
     const filtered = itemsToRestock.filter(p => {
+      if (p.desactivado) return false; // Ignore general deactivated products
       if (omitExcluidos && p.noSurtirPaseo) return false;
       const matchCat = selectedCategory === 'Todas' || p.categoria === selectedCategory;
       const q = searchQuery.trim().toLowerCase();
