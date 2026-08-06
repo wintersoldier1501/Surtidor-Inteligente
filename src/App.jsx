@@ -6,12 +6,15 @@ import CatalogView from './components/CatalogView';
 import WorkshopView from './components/WorkshopView';
 import ExcelImporter from './components/ExcelImporter';
 import ImageModal from './components/ImageModal';
+import PinLockModal from './components/PinLockModal';
 import { subscribeToLiveProducts, pushProductsToCloud } from './firebase';
 
 const STORAGE_KEY = 'accesorizate_products_v1';
+const UNLOCKED_KEY = 'accesorizate_pin_unlocked_v1';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('surtidor'); // 'surtidor', 'catalogo', 'taller', 'importar'
+  const [isUnlocked, setIsUnlocked] = useState(() => localStorage.getItem(UNLOCKED_KEY) === 'true');
   const isRemoteUpdateRef = useRef(false);
 
   const [products, setProducts] = useState(() => {
@@ -261,11 +264,32 @@ export default function App() {
     return { totalProducts, tallerCount, surtirCount };
   }, [products]);
 
+  const handleLock = () => {
+    localStorage.removeItem(UNLOCKED_KEY);
+    setIsUnlocked(false);
+  };
+
+  if (!isUnlocked) {
+    return (
+      <PinLockModal
+        onUnlock={() => {
+          localStorage.setItem(UNLOCKED_KEY, 'true');
+          setIsUnlocked(true);
+        }}
+      />
+    );
+  }
+
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       
       {/* Top Navbar */}
-      <Navbar activeTab={activeTab} setActiveTab={setActiveTab} stats={stats} />
+      <Navbar
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        stats={stats}
+        onLock={handleLock}
+      />
 
       {/* Main View Container */}
       <main style={{ flex: 1, paddingBottom: '60px' }}>

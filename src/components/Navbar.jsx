@@ -1,7 +1,7 @@
 import React from 'react';
-import { Sparkles, Package, Hammer, Upload, Gem, Layers, Warehouse } from 'lucide-react';
+import { Sparkles, Package, Hammer, Upload, Gem, Layers, Warehouse, Lock } from 'lucide-react';
 
-export default function Navbar({ activeTab, setActiveTab, stats }) {
+export default function Navbar({ activeTab, setActiveTab, stats, onLock }) {
   return (
     <header className="no-print" style={{ background: '#11131a', borderBottom: '1px solid var(--border-color)', position: 'sticky', top: 0, zIndex: 100 }}>
       <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
@@ -91,6 +91,17 @@ export default function Navbar({ activeTab, setActiveTab, stats }) {
             <div>Sucursal Matriz: <strong style={{ color: '#fff' }}>Vista Hermosa</strong></div>
             <div>Destino Surtido: <strong style={{ color: 'var(--gold-primary)' }}>Paseo Durango</strong></div>
           </div>
+          {onLock && (
+            <button
+              className="btn btn-outline"
+              onClick={onLock}
+              style={{ padding: '6px 10px', fontSize: '0.75rem', borderColor: 'rgba(239, 68, 68, 0.4)', color: '#f87171' }}
+              title="Bloquear el sistema con PIN"
+            >
+              <Lock size={14} />
+              <span>Bloquear</span>
+            </button>
+          )}
         </div>
 
       </div>
