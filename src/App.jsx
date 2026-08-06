@@ -72,9 +72,11 @@ export default function App() {
         const itemData = newStockMap[sku];
         if (existingMap.has(sku)) {
           const current = existingMap.get(sku);
+          const newNombre = itemData.nombre || current.nombre;
           existingMap.set(sku, {
             ...current,
-            nombre: itemData.nombre || current.nombre,
+            nombre: newNombre,
+            categoria: detectCategory(newNombre),
             precioPublico: itemData.precioPublico || current.precioPublico,
             precioMayoreo: itemData.precioMayoreo || current.precioMayoreo,
             stockGeneral: itemData.stockGeneral,
