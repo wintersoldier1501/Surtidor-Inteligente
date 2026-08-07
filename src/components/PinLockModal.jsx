@@ -46,19 +46,26 @@ export default function PinLockModal({ onUnlock }) {
         border: '1px solid rgba(16, 185, 129, 0.3)',
         boxShadow: '0 20px 50px rgba(0, 0, 0, 0.8)'
       }}>
-        {/* Lock Icon */}
+        {/* Icon */}
         <div style={{
-          width: '64px',
-          height: '64px',
-          borderRadius: '50%',
-          background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.4))',
-          border: '1px solid var(--emerald-primary)',
+          width: '72px',
+          height: '72px',
+          borderRadius: '16px',
+          background: '#ffffff',
+          border: '2px solid var(--emerald-primary)',
+          boxShadow: '0 0 20px rgba(16, 185, 129, 0.4)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          margin: '0 auto 20px auto'
+          padding: '8px',
+          margin: '0 auto 20px auto',
+          overflow: 'hidden'
         }}>
-          <Lock size={30} color="var(--gold-primary)" />
+          <img
+            src="./logo.png"
+            alt="Accesorizate Surtido Icon"
+            style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+          />
         </div>
 
         <h2 style={{ color: '#fff', fontSize: '1.4rem', marginBottom: '8px', fontFamily: 'serif', letterSpacing: '0.5px' }}>

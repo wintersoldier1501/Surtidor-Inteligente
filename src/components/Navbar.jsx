@@ -10,9 +10,9 @@ export default function Navbar({ activeTab, setActiveTab, stats, onLock }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexShrink: 0 }}>
           <div
             style={{
-              width: '44px',
-              height: '44px',
-              borderRadius: '50%',
+              width: '46px',
+              height: '46px',
+              borderRadius: '12px',
               background: '#ffffff',
               border: '2px solid var(--gold-primary)',
               boxShadow: '0 0 14px rgba(212, 175, 55, 0.4)',
@@ -24,7 +24,7 @@ export default function Navbar({ activeTab, setActiveTab, stats, onLock }) {
             }}
           >
             <img
-              src="/logo.svg"
+              src="./logo.png"
               alt="Accesorizate Logo"
               style={{ width: '100%', height: '100%', objectFit: 'contain' }}
             />
