@@ -31,12 +31,25 @@ export default function App() {
 
   const [selectedProductForImage, setSelectedProductForImage] = useState(null);
 
-  // Subscribe to Firebase Realtime updates from other devices
+  // Subscribe to Firebase Realtime updates from other devices with smart state merging
   useEffect(() => {
     const unsubscribe = subscribeToLiveProducts((remoteProducts) => {
       if (remoteProducts && Array.isArray(remoteProducts) && remoteProducts.length > 0) {
         isRemoteUpdateRef.current = true;
-        setProducts(remoteProducts);
+        setProducts(prevProducts => {
+          const localMap = new Map(prevProducts.map(p => [p.sku, p]));
+          return remoteProducts.map(remoteItem => {
+            const localItem = localMap.get(remoteItem.sku);
+            return {
+              ...remoteItem,
+              desactivado: Boolean(remoteItem.desactivado || localItem?.desactivado),
+              noSurtirPaseo: Boolean(remoteItem.noSurtirPaseo || localItem?.noSurtirPaseo),
+              estadoTaller: remoteItem.estadoTaller || localItem?.estadoTaller || 'disponible',
+              notaTaller: remoteItem.notaTaller || localItem?.notaTaller || '',
+              esTaller: remoteItem.esTaller ?? localItem?.esTaller ?? false
+            };
+          });
+        });
       }
     });
 
