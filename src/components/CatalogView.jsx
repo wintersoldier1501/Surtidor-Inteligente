@@ -10,6 +10,35 @@ export default function CatalogView({ products, onToggleTaller, onOpenImageModal
   const [syncing, setSyncing] = useState(false);
   const [syncMsg, setSyncMsg] = useState(null);
   const pageSize = 50;
+  const [showBatchModal, setShowBatchModal] = useState(false);
+  const [batchInput, setBatchInput] = useState('');
+  const [batchMsg, setBatchMsg] = useState(null);
+
+  const handleBatchDeactivate = () => {
+    const rawTokens = batchInput.split(/[\s,\n]+/);
+    const skusToDeactivate = new Set(rawTokens.map(t => t.trim().toUpperCase()).filter(Boolean));
+    
+    let count = 0;
+    products.forEach(p => {
+      const skuUpper = p.sku.trim().toUpperCase();
+      if (skusToDeactivate.has(skuUpper) && !p.desactivado) {
+        onToggleDesactivado(p.sku);
+        count++;
+      }
+    });
+
+    if (count > 0) {
+      setBatchMsg(`¡Se desactivaron ${count} productos correctamente y se guardaron en Firebase Cloud!`);
+      setBatchInput('');
+      setTimeout(() => {
+        setBatchMsg(null);
+        setShowBatchModal(false);
+      }, 2000);
+    } else {
+      setBatchMsg('No se encontraron códigos nuevos por desactivar de los ingresados.');
+      setTimeout(() => setBatchMsg(null), 3000);
+    }
+  };
 
   const handleSync = async () => {
     setSyncing(true);
@@ -67,7 +96,11 @@ export default function CatalogView({ products, onToggleTaller, onOpenImageModal
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: '12px' }}>
+        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+          <button className="btn btn-outline" onClick={() => setShowBatchModal(true)} style={{ borderColor: 'rgba(239, 68, 68, 0.5)', color: '#f87171' }}>
+            <XCircle size={18} />
+            <span>⚡ Desactivación Rápida por Lista</span>
+          </button>
           <button className="btn btn-gold" onClick={handleSync} disabled={syncing}>
             <ImageIcon size={18} />
             <span>{syncing ? 'Sincronizando...' : '⚡ Sincronizar Fotos de catalogos-accesorios.web.app'}</span>
@@ -344,6 +377,57 @@ export default function CatalogView({ products, onToggleTaller, onOpenImageModal
         </div>
 
       </div>
+
+      {/* Batch Deactivation Modal */}
+      {showBatchModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.85)',
+          zIndex: 9999,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '20px'
+        }}>
+          <div className="glass-card" style={{ maxWidth: '520px', width: '100%', padding: '28px', border: '1px solid rgba(239, 68, 68, 0.4)' }}>
+            <h3 style={{ color: '#fff', fontSize: '1.25rem', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <XCircle color="#f87171" size={24} />
+              <span>Desactivación Rápida por Lista de Códigos</span>
+            </h3>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', marginBottom: '16px' }}>
+              Pega aquí las claves o SKUs que deseas desactivar en lote (separados por comas, espacios o saltos de línea).
+            </p>
+
+            <textarea
+              className="input-field"
+              rows={6}
+              placeholder="Ejemplo: AX010G, AX010P, AX020, AX024, AX1037-A"
+              value={batchInput}
+              onChange={(e) => setBatchInput(e.target.value)}
+              style={{ width: '100%', padding: '12px', fontSize: '0.9rem', marginBottom: '16px', fontFamily: 'monospace' }}
+            />
+
+            {batchMsg && (
+              <div style={{ padding: '10px 14px', borderRadius: 'var(--radius-sm)', background: 'var(--success-bg)', color: '#34d399', fontSize: '0.85rem', marginBottom: '16px', border: '1px solid rgba(52, 211, 153, 0.3)' }}>
+                {batchMsg}
+              </div>
+            )}
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+              <button className="btn btn-outline" onClick={() => setShowBatchModal(false)}>
+                Cancelar
+              </button>
+              <button className="btn btn-danger" onClick={handleBatchDeactivate} disabled={!batchInput.trim()}>
+                🔴 Desactivar Todos los de la Lista
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );
