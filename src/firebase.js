@@ -1,5 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getDatabase, ref, onValue, set } from 'firebase/database';
+import { getAuth, signInAnonymously } from 'firebase/auth';
 
 // Sergio's official Firebase Project credentials (surtido-almacen)
 const firebaseConfig = {
@@ -16,6 +17,12 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 export const db = getDatabase(app);
+export const auth = getAuth(app);
+
+// Authenticate anonymously so app calls satisfy secure "auth != null" rules
+signInAnonymously(auth).catch((error) => {
+  console.warn("Firebase Anonymous Auth warning:", error);
+});
 
 // Realtime DB reference for live product sync
 export const productsRef = ref(db, 'surtido/products');
