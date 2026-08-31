@@ -308,20 +308,23 @@ export default function CatalogView({ products, onToggleTaller, onOpenImageModal
                     <td style={{ padding: '12px 16px', textAlign: 'right' }}>
                       <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
                         <button
-                          className="btn btn-outline"
                           onClick={() => onToggleEstrella(item.sku)}
                           style={{
-                            padding: '4px 8px',
-                            fontSize: '0.75rem',
-                            borderColor: item.esEstrella ? 'var(--gold-primary)' : 'rgba(212, 175, 55, 0.3)',
-                            background: item.esEstrella ? 'rgba(212, 175, 55, 0.25)' : 'transparent',
-                            color: item.esEstrella ? 'var(--gold-primary)' : 'var(--text-muted)',
-                            fontWeight: item.esEstrella ? 'bold' : 'normal'
+                            padding: '6px',
+                            width: '32px',
+                            height: '32px',
+                            borderRadius: '8px',
+                            border: item.esEstrella ? '1px solid var(--gold-primary)' : '1px solid rgba(255, 255, 255, 0.15)',
+                            background: item.esEstrella ? 'rgba(212, 175, 55, 0.25)' : 'rgba(255, 255, 255, 0.04)',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s'
                           }}
-                          title={item.esEstrella ? "Producto Estrella (Se surte siempre con prioridad)" : "Marcar como Producto Estrella"}
+                          title={item.esEstrella ? "Producto Estrella (Prioridad Top) - Clic para quitar" : "Marcar como Producto Estrella"}
                         >
-                          <Star size={12} fill={item.esEstrella ? 'var(--gold-primary)' : 'none'} color={item.esEstrella ? 'var(--gold-primary)' : 'currentColor'} />
-                          <span>{item.esEstrella ? '⭐ ESTRELLA' : '⭐ MARCAR'}</span>
+                          <Star size={16} fill={item.esEstrella ? 'var(--gold-primary)' : 'none'} color={item.esEstrella ? 'var(--gold-primary)' : 'var(--text-muted)'} />
                         </button>
                         <button
                           className="btn btn-outline"
