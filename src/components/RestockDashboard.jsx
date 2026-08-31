@@ -1,39 +1,60 @@
 import React, { useState, useMemo } from 'react';
-import { Warehouse, Printer, Copy, Check, Filter, Hammer, PackageCheck, AlertTriangle, Image as ImageIcon, Search } from 'lucide-react';
+import { Warehouse, Printer, Copy, Check, Filter, Hammer, PackageCheck, AlertTriangle, Image as ImageIcon, Search, Star } from 'lucide-react';
 
-export default function RestockDashboard({ products, onOpenImageModal, onToggleNoSurtirPaseo }) {
+export default function RestockDashboard({ products, onOpenImageModal, onToggleNoSurtirPaseo, onToggleEstrella }) {
   const [paseoThreshold, setPaseoThreshold] = useState(0); // 0 means Paseo stock == 0
   const [selectedCategory, setSelectedCategory] = useState('Todas');
   const [searchQuery, setSearchQuery] = useState('');
+  const [prioridadFilter, setPrioridadFilter] = useState('todas'); // 'todas', 'estrellas', 'normales'
   const [activeSubTab, setActiveSubTab] = useState('general'); // 'general', 'taller', 'agotados'
   const [omitExcluidos, setOmitExcluidos] = useState(true);
   const [copiedMsg, setCopiedMsg] = useState(false);
 
   // Compute items that require restocking for Paseo Durango
   const restockAnalysis = useMemo(() => {
-    const itemsToRestock = products.filter(p => p.stockPaseo <= paseoThreshold);
-
-    // Apply category, search & exclusion filters
-    const filtered = itemsToRestock.filter(p => {
-      if (p.desactivado) return false; // Ignore general deactivated products
+    const itemsToRestock = products.filter(p => {
+      if (p.desactivado) return false;
       if (omitExcluidos && p.noSurtirPaseo) return false;
+
+      // 🌟 REGLA DE PRODUCTO ESTRELLA / TOP VENTAS:
+      // Si el producto está marcado como Estrella y en Paseo hay 4 o menos piezas, ¡SIEMPRE ENTRA A SURTIDO!
+      if (p.esEstrella && p.stockPaseo <= 4) return true;
+
+      // Regla estándar: comparar contra el umbral seleccionado (0, 1 o 2 piezas)
+      return p.stockPaseo <= paseoThreshold;
+    });
+
+    // Apply category, search, exclusion & priority filters
+    const filtered = itemsToRestock.filter(p => {
       const matchCat = selectedCategory === 'Todas' || p.categoria === selectedCategory;
       const q = searchQuery.trim().toLowerCase();
       const matchQuery = !q || p.sku.toLowerCase().includes(q) || p.nombre.toLowerCase().includes(q);
-      return matchCat && matchQuery;
+      const matchPrioridad =
+        prioridadFilter === 'todas' ||
+        (prioridadFilter === 'estrellas' && p.esEstrella) ||
+        (prioridadFilter === 'normales' && !p.esEstrella);
+
+      return matchCat && matchQuery && matchPrioridad;
     });
 
+    // Sorter: Los Productos Estrella SIEMPRE aparecen HASTA ARRIBA de las listas de surtido
+    const starSort = (a, b) => {
+      if (a.esEstrella && !b.esEstrella) return -1;
+      if (!a.esEstrella && b.esEstrella) return 1;
+      return 0;
+    };
+
     // 1. From Almacen General (General > 0)
-    const surtirGeneral = filtered.filter(p => p.stockGeneral > 0);
+    const surtirGeneral = filtered.filter(p => p.stockGeneral > 0).sort(starSort);
 
     // 2. Taller Order (General == 0 && esTaller)
-    const ordenTaller = filtered.filter(p => p.stockGeneral <= 0 && p.esTaller);
+    const ordenTaller = filtered.filter(p => p.stockGeneral <= 0 && p.esTaller).sort(starSort);
 
     // 3. Out of stock (General == 0 && !esTaller)
-    const agotados = filtered.filter(p => p.stockGeneral <= 0 && !p.esTaller);
+    const agotados = filtered.filter(p => p.stockGeneral <= 0 && !p.esTaller).sort(starSort);
 
     return { surtirGeneral, ordenTaller, agotados, totalNeedingRestock: itemsToRestock.length };
-  }, [products, paseoThreshold, selectedCategory, searchQuery, omitExcluidos]);
+  }, [products, paseoThreshold, selectedCategory, searchQuery, omitExcluidos, prioridadFilter]);
 
   const handlePrint = () => {
     window.print();
@@ -144,6 +165,22 @@ export default function RestockDashboard({ products, onOpenImageModal, onToggleN
               {categories.map(cat => (
                 <option key={cat} value={cat}>{cat}</option>
               ))}
+            </select>
+          </div>
+
+          {/* Priority filter */}
+          <div>
+            <label style={{ fontSize: '0.8rem', color: 'var(--gold-primary)', fontWeight: '600', display: 'block', marginBottom: '6px' }}>
+              PRIORIDAD REPOSICIÓN:
+            </label>
+            <select
+              className="input-field"
+              value={prioridadFilter}
+              onChange={(e) => setPrioridadFilter(e.target.value)}
+            >
+              <option value="todas">👁️ Mostrar Todo el Surtido</option>
+              <option value="estrellas">⭐ Solo Productos Estrella ({products.filter(p => p.esEstrella).length})</option>
+              <option value="normales">📦 Productos Normales ({products.filter(p => !p.esEstrella).length})</option>
             </select>
           </div>
 
@@ -309,7 +346,14 @@ export default function RestockDashboard({ products, onOpenImageModal, onToggleN
 
                     {/* SKU */}
                     <td style={{ padding: '12px 16px', fontWeight: '700', color: 'var(--gold-primary)', fontFamily: 'monospace', fontSize: '0.95rem' }}>
-                      {item.sku}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                        <span>{item.sku}</span>
+                        {item.esEstrella && (
+                          <span className="badge badge-surtir" style={{ fontSize: '0.7rem', padding: '2px 8px', background: 'rgba(212, 175, 55, 0.2)', border: '1px solid var(--gold-primary)', color: 'var(--gold-primary)' }} title="Producto Estrella / Top Ventas">
+                            ⭐ TOP VENTAS
+                          </span>
+                        )}
+                      </div>
                     </td>
 
                     {/* Nombre */}
@@ -370,13 +414,30 @@ export default function RestockDashboard({ products, onOpenImageModal, onToggleN
 
                     {/* Action */}
                     <td className="no-print" style={{ padding: '12px 16px', textAlign: 'right' }}>
-                      <button
-                        className="btn btn-outline"
-                        onClick={() => onOpenImageModal(item)}
-                        style={{ padding: '4px 10px', fontSize: '0.75rem' }}
-                      >
-                        {item.imagen ? 'Cambiar Foto' : 'Agregar Foto'}
-                      </button>
+                      <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
+                        <button
+                          className="btn btn-outline"
+                          onClick={() => onToggleEstrella(item.sku)}
+                          style={{
+                            padding: '4px 8px',
+                            fontSize: '0.75rem',
+                            borderColor: item.esEstrella ? 'var(--gold-primary)' : 'rgba(212, 175, 55, 0.3)',
+                            background: item.esEstrella ? 'rgba(212, 175, 55, 0.25)' : 'transparent',
+                            color: item.esEstrella ? 'var(--gold-primary)' : 'var(--text-muted)'
+                          }}
+                          title={item.esEstrella ? "Producto Estrella (Se surte siempre con prioridad)" : "Marcar como Producto Estrella"}
+                        >
+                          <Star size={12} fill={item.esEstrella ? 'var(--gold-primary)' : 'none'} color={item.esEstrella ? 'var(--gold-primary)' : 'currentColor'} />
+                          <span>{item.esEstrella ? '⭐ ESTRELLA' : '⭐ MARCAR'}</span>
+                        </button>
+                        <button
+                          className="btn btn-outline"
+                          onClick={() => onOpenImageModal(item)}
+                          style={{ padding: '4px 10px', fontSize: '0.75rem' }}
+                        >
+                          {item.imagen ? 'Foto' : '+ Foto'}
+                        </button>
+                      </div>
                     </td>
 
                   </tr>

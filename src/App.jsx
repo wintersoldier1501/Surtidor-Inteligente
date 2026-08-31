@@ -44,6 +44,7 @@ export default function App() {
               ...remoteItem,
               desactivado: Boolean(remoteItem.desactivado || localItem?.desactivado),
               noSurtirPaseo: Boolean(remoteItem.noSurtirPaseo || localItem?.noSurtirPaseo),
+              esEstrella: Boolean(remoteItem.esEstrella || localItem?.esEstrella),
               estadoTaller: remoteItem.estadoTaller || localItem?.estadoTaller || 'disponible',
               notaTaller: remoteItem.notaTaller || localItem?.notaTaller || '',
               esTaller: remoteItem.esTaller ?? localItem?.esTaller ?? false
@@ -192,6 +193,15 @@ export default function App() {
     });
   };
 
+  // Handler: Toggle Producto Estrella / Prioridad Top Status
+  const handleToggleEstrella = (sku) => {
+    setProducts(prev => {
+      const next = prev.map(p => (p.sku === sku ? { ...p, esEstrella: !p.esEstrella } : p));
+      pushProductsToCloud(next);
+      return next;
+    });
+  };
+
   // Helper function to resolve best photo match according to Sergio's business rules
   const getBestPhotoForSku = (skuUpper, onlineMap) => {
     // 1. Exact match ALWAYS takes highest priority (e.g., AX1987-P matches AX1987-P)
@@ -332,6 +342,7 @@ export default function App() {
             onSyncCatalogPhotos={handleSyncCatalogPhotos}
             onToggleNoSurtirPaseo={handleToggleNoSurtirPaseo}
             onToggleDesactivado={handleToggleDesactivado}
+            onToggleEstrella={handleToggleEstrella}
           />
         )}
 
@@ -344,6 +355,7 @@ export default function App() {
             onDeleteProduct={handleDeleteProduct}
             onToggleNoSurtirPaseo={handleToggleNoSurtirPaseo}
             onToggleDesactivado={handleToggleDesactivado}
+            onToggleEstrella={handleToggleEstrella}
           />
         )}
 

@@ -1,11 +1,12 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Filter, Hammer, Image as ImageIcon, Edit2, CheckCircle2, XCircle, Trash2 } from 'lucide-react';
+import { Search, Filter, Hammer, Image as ImageIcon, Edit2, CheckCircle2, XCircle, Trash2, Star } from 'lucide-react';
 
-export default function CatalogView({ products, onToggleTaller, onOpenImageModal, onSyncCatalogPhotos, onDeleteProduct, onToggleNoSurtirPaseo, onToggleDesactivado }) {
+export default function CatalogView({ products, onToggleTaller, onOpenImageModal, onSyncCatalogPhotos, onDeleteProduct, onToggleNoSurtirPaseo, onToggleDesactivado, onToggleEstrella }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('Todas');
   const [tallerFilter, setTallerFilter] = useState('Todos'); // 'Todos', 'SoloTaller', 'NoTaller'
   const [statusFilter, setStatusFilter] = useState('activos'); // 'activos', 'desactivados', 'todos'
+  const [prioridadFilter, setPrioridadFilter] = useState('todos'); // 'todos', 'estrellas', 'normales'
   const [page, setPage] = useState(1);
   const [syncing, setSyncing] = useState(false);
   const [syncMsg, setSyncMsg] = useState(null);
@@ -39,10 +40,14 @@ export default function CatalogView({ products, onToggleTaller, onOpenImageModal
         statusFilter === 'todos' ||
         (statusFilter === 'activos' && !p.desactivado) ||
         (statusFilter === 'desactivados' && p.desactivado);
+      const matchPrioridad =
+        prioridadFilter === 'todos' ||
+        (prioridadFilter === 'estrellas' && p.esEstrella) ||
+        (prioridadFilter === 'normales' && !p.esEstrella);
 
-      return matchSearch && matchCat && matchTaller && matchStatus;
+      return matchSearch && matchCat && matchTaller && matchStatus && matchPrioridad;
     });
-  }, [products, searchQuery, categoryFilter, tallerFilter, statusFilter]);
+  }, [products, searchQuery, categoryFilter, tallerFilter, statusFilter, prioridadFilter]);
 
   const paginatedProducts = useMemo(() => {
     const start = (page - 1) * pageSize;
@@ -146,6 +151,22 @@ export default function CatalogView({ products, onToggleTaller, onOpenImageModal
               <option value="activos">🟢 Solo Activos ({products.filter(p => !p.desactivado).length})</option>
               <option value="desactivados">🔴 Solo Desactivados ({products.filter(p => p.desactivado).length})</option>
               <option value="todos">👁️ Mostrar Todos ({products.length})</option>
+            </select>
+          </div>
+
+          {/* Priority filter */}
+          <div>
+            <label style={{ fontSize: '0.8rem', color: 'var(--gold-primary)', fontWeight: '600', display: 'block', marginBottom: '6px' }}>
+              PRIORIDAD REPOSICIÓN:
+            </label>
+            <select
+              className="input-field"
+              value={prioridadFilter}
+              onChange={(e) => { setPrioridadFilter(e.target.value); setPage(1); }}
+            >
+              <option value="todos">👁️ Todos los Productos</option>
+              <option value="estrellas">⭐ Solo Productos Estrella ({products.filter(p => p.esEstrella).length})</option>
+              <option value="normales">📦 Productos Normales ({products.filter(p => !p.esEstrella).length})</option>
             </select>
           </div>
 
@@ -286,6 +307,22 @@ export default function CatalogView({ products, onToggleTaller, onOpenImageModal
                     {/* Action buttons */}
                     <td style={{ padding: '12px 16px', textAlign: 'right' }}>
                       <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
+                        <button
+                          className="btn btn-outline"
+                          onClick={() => onToggleEstrella(item.sku)}
+                          style={{
+                            padding: '4px 8px',
+                            fontSize: '0.75rem',
+                            borderColor: item.esEstrella ? 'var(--gold-primary)' : 'rgba(212, 175, 55, 0.3)',
+                            background: item.esEstrella ? 'rgba(212, 175, 55, 0.25)' : 'transparent',
+                            color: item.esEstrella ? 'var(--gold-primary)' : 'var(--text-muted)',
+                            fontWeight: item.esEstrella ? 'bold' : 'normal'
+                          }}
+                          title={item.esEstrella ? "Producto Estrella (Se surte siempre con prioridad)" : "Marcar como Producto Estrella"}
+                        >
+                          <Star size={12} fill={item.esEstrella ? 'var(--gold-primary)' : 'none'} color={item.esEstrella ? 'var(--gold-primary)' : 'currentColor'} />
+                          <span>{item.esEstrella ? '⭐ ESTRELLA' : '⭐ MARCAR'}</span>
+                        </button>
                         <button
                           className="btn btn-outline"
                           onClick={() => onOpenImageModal(item)}
