@@ -339,25 +339,6 @@ export default function RestockDashboard({ products, onOpenImageModal, onToggleN
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--gold-primary)', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                  <th style={{ padding: '12px 8px', textAlign: 'center' }}>
-                    <input
-                      type="checkbox"
-                      checked={
-                        getCurrentList(activeSubTab, restockAnalysis).length > 0 &&
-                        getCurrentList(activeSubTab, restockAnalysis).every(item => selectedSkusForLabels.includes(item.sku))
-                      }
-                      onChange={(e) => {
-                        const currentSkus = getCurrentList(activeSubTab, restockAnalysis).map(i => i.sku);
-                        if (e.target.checked) {
-                          setSelectedSkusForLabels(prev => Array.from(new Set([...prev, ...currentSkus])));
-                        } else {
-                          setSelectedSkusForLabels(prev => prev.filter(sku => !currentSkus.includes(sku)));
-                        }
-                      }}
-                      style={{ width: '16px', height: '16px', accentColor: 'var(--gold-primary)', cursor: 'pointer' }}
-                      title="Seleccionar todo para etiquetas"
-                    />
-                  </th>
                   <th style={{ padding: '12px 16px' }}>Foto</th>
                   <th style={{ padding: '12px 16px' }}>Clave (SKU)</th>
                   <th style={{ padding: '12px 16px' }}>Nombre del Artículo</th>
@@ -372,22 +353,6 @@ export default function RestockDashboard({ products, onOpenImageModal, onToggleN
               <tbody>
                 {getCurrentList(activeSubTab, restockAnalysis).map((item) => (
                   <tr key={item.sku} style={{ borderBottom: '1px solid var(--border-color)', transition: 'background 0.15s' }}>
-                    
-                    {/* Checkbox for label selection */}
-                    <td style={{ padding: '12px 8px', textAlign: 'center' }}>
-                      <input
-                        type="checkbox"
-                        checked={selectedSkusForLabels.includes(item.sku)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setSelectedSkusForLabels(prev => [...prev, item.sku]);
-                          } else {
-                            setSelectedSkusForLabels(prev => prev.filter(s => s !== item.sku));
-                          }
-                        }}
-                        style={{ width: '16px', height: '16px', accentColor: 'var(--gold-primary)', cursor: 'pointer' }}
-                      />
-                    </td>
                     
                     {/* Thumbnail / Image */}
                     <td style={{ padding: '12px 16px' }}>
