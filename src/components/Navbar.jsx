@@ -31,7 +31,7 @@ export default function Navbar({ activeTab, setActiveTab, stats, onLock }) {
           </div>
           <div>
             <h1 style={{ fontSize: '1.2rem', color: '#fff', letterSpacing: '1px', lineHeight: 1.1 }}>ACCESORIZATE</h1>
-            <span style={{ fontSize: '0.72rem', color: 'var(--gold-primary)', fontWeight: '600', letterSpacing: '0.5px' }}>Surtido Inteligente & Taller</span>
+            <span style={{ fontSize: '0.72rem', color: 'var(--gold-primary)', fontWeight: '600', letterSpacing: '0.5px' }}>Logística & Taller</span>
           </div>
         </div>
 

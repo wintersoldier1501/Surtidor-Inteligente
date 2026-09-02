@@ -99,7 +99,7 @@ export default function RestockDashboard({ products, onOpenImageModal, onToggleN
             Surtidor entre Almacenes
           </h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>
-            Genera automáticamente la lista de surtido de Almacén General y la Orden de Producción para el Taller.
+            Orden y Producción de Almacén General y Taller.
           </p>
         </div>
 
