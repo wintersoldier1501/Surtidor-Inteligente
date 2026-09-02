@@ -351,12 +351,12 @@ export default function LabelPrinterModal({ isOpen, onClose, initialProducts = [
         tspl += `BAR 245,4,2,80\r\n`;
         tspl += `TEXT 360,75,"2",90,1,1,"${skuEscaped}  $${item.precio}"\r\n`;
       } else {
-        // 1. Left Half: Cleaned Product Name + SKU Line (Centered mathematically in left 0-14mm box)
+        // 1. Left Half: Cleaned Product Name + SKU Line (15 chars/line, 12-dot vertical spacing, mathematically centered)
         const leftLines = getJewelryLeftLines(item.nombre, item.sku);
         leftLines.forEach((l, idx) => {
-          const textWidth = l.length * 8;
-          const lineX = Math.max(2, 55 - Math.round(textWidth / 2));
-          const yPos = 6 + (idx * 14);
+          const textWidth = l.length * 7;
+          const lineX = Math.max(1, 55 - Math.round(textWidth / 2));
+          const yPos = 3 + (idx * 12);
           tspl += `TEXT ${lineX},${yPos},"1",0,1,1,"${l}"\r\n`;
         });
 
@@ -1025,15 +1025,15 @@ function SingleLabelPreview({ item, scale = 3.2 }) {
           <div style={{
             width: '26%',
             height: '100%',
-            padding: '2px 3px',
+            padding: '1px 2px',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'center',
             alignItems: 'center',
             textAlign: 'center',
-            fontSize: '6px',
+            fontSize: '5.2px',
             fontWeight: 'normal',
-            lineHeight: '1.15',
+            lineHeight: '1.1',
             textTransform: 'uppercase',
             fontFamily: 'monospace',
             whiteSpace: 'pre-line'

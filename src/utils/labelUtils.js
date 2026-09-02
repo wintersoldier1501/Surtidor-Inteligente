@@ -26,19 +26,20 @@ export function getJewelryLeftLines(rawNombre = '', rawSku = '') {
   const words = name.replace(/-/g, ' ').split(/\s+/).filter(Boolean);
   let descLines = [];
   let cur = "";
+  const maxCharsPerLine = 15; // Increased to 15 chars so full description words fit cleanly
 
   words.forEach(w => {
-    if ((cur + " " + w).trim().length <= 11) {
+    if ((cur + " " + w).trim().length <= maxCharsPerLine) {
       cur = (cur + " " + w).trim();
     } else {
       if (cur) descLines.push(cur);
-      cur = w.length > 11 ? w.substring(0, 11) : w;
+      cur = w.length > maxCharsPerLine ? w.substring(0, maxCharsPerLine) : w;
     }
   });
   if (cur) descLines.push(cur);
 
   const resultLines = descLines.slice(0, 3);
-  const skuLeft = sku.length > 10 ? sku.substring(0, 10) : sku;
+  const skuLeft = sku.length > 12 ? sku.substring(0, 12) : sku;
   if (skuLeft) resultLines.push(skuLeft);
 
   return resultLines;
@@ -83,7 +84,7 @@ export function convertElementsToTSPL(elements, product, copies = 1) {
         const words = content.replace(/-/g, ' ').split(/\s+/).filter(Boolean);
         let lines = [];
         let cur = "";
-        const maxCharsPerLine = el.fontSize > 7 ? 8 : 11;
+        const maxCharsPerLine = 15;
 
         words.forEach(w => {
           if ((cur + " " + w).trim().length <= maxCharsPerLine) {
@@ -95,12 +96,12 @@ export function convertElementsToTSPL(elements, product, copies = 1) {
         });
         if (cur) lines.push(cur);
 
-        const ySpacing = el.fontSize > 7 ? 18 : 14;
-        const fontType = el.fontSize > 7 ? "2" : "1";
+        const ySpacing = 12;
+        const fontType = "1";
 
         lines.slice(0, 3).forEach((lineText, idx) => {
           let lineX = xDots;
-          const charWidth = fontType === "2" ? 12 : 8;
+          const charWidth = 7;
           const textWidth = lineText.length * charWidth;
 
           if (el.align === 'center') {
@@ -125,8 +126,8 @@ export function convertElementsToTSPL(elements, product, copies = 1) {
         content = (el.customText || '').toUpperCase();
       }
 
-      const fontType = el.fontSize > 7 ? "2" : "1";
-      const charWidth = fontType === "2" ? 12 : 8;
+      const fontType = "1";
+      const charWidth = 7;
       const textWidth = content.length * charWidth;
       let textX = xDots;
 
