@@ -296,23 +296,31 @@ export default function LabelPrinterModal({ isOpen, onClose, initialProducts = [
             cur = (cur + " " + w).trim();
           } else {
             if (cur) lines.push(cur);
-            cur = w.substring(0, 10);
+            cur = w.length > 10 ? w.substring(0, 10) : w;
           }
         });
         if (cur) lines.push(cur);
 
+        // Keep maximum 3 lines for description so line 4 is strictly reserved for SKU
         const leftLines = lines.slice(0, 3);
-        leftLines.push(skuEscaped);
+        leftLines.push(skuEscaped.substring(0, 11));
 
         leftLines.forEach((l, idx) => {
           const yPos = 6 + (idx * 18);
           tspl += `TEXT 16,${yPos},"1",0,1,1,"${l}"\r\n`;
         });
 
-        // 2. Right Half of Printable Head: Price ($), Barcode Code128, SKU shifted left
-        tspl += `TEXT 140,6,"1",0,1,1,"$ ${item.precio}.00"\r\n`;
-        tspl += `BARCODE 122,26,"128",22,0,0,1,2,"${skuEscaped}"\r\n`;
-        tspl += `TEXT 140,58,"1",0,1,1,"${skuEscaped}"\r\n`;
+        // 2. Right Half of Printable Head: Price ($), Barcode Code128, SKU (Auto-calibrated for long SKUs)
+        const priceText = `$ ${item.precio}.00`;
+        const skuFormatted = skuEscaped.substring(0, 12);
+
+        // Dynamic Barcode position based on SKU length to prevent right border overflow
+        const barcodeX = skuFormatted.length > 9 ? 115 : 122;
+        const barcodeWidth = skuFormatted.length > 9 ? 1 : 1;
+
+        tspl += `TEXT 140,6,"1",0,1,1,"${priceText}"\r\n`;
+        tspl += `BARCODE ${barcodeX},26,"128",22,0,0,${barcodeWidth},2,"${skuFormatted}"\r\n`;
+        tspl += `TEXT 140,58,"1",0,1,1,"${skuFormatted}"\r\n`;
 
         // 3. Long Adhesive Tail (32mm to 63mm): LEFT COMPLETELY BLANK!
       }
