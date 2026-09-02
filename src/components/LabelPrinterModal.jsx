@@ -42,7 +42,7 @@ export default function LabelPrinterModal({ isOpen, onClose, initialProducts = [
     return c.includes('arete') || c.includes('piercing') || n.includes('arete') || n.includes('stud') || n.includes('earcuff') || n.includes('arracada');
   }
 
-  // Handle Excel Upload for Labels
+  // Handle Excel Upload for Labels with Accent-Insensitive Column Key Resolver
   const handleExcelUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -58,14 +58,34 @@ export default function LabelPrinterModal({ isOpen, onClose, initialProducts = [
 
         if (data && data.length > 0) {
           const newItems = [];
+          
+          // Helper to extract column value ignoring accents, spaces, and case
+          const getValue = (row, candidates) => {
+            const keys = Object.keys(row);
+            for (const c of candidates) {
+              const normCand = c.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '');
+              for (const k of keys) {
+                const normKey = k.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '');
+                if (normKey === normCand || normKey.includes(normCand)) {
+                  if (row[k] !== undefined && row[k] !== '') {
+                    return row[k];
+                  }
+                }
+              }
+            }
+            return '';
+          };
+
           data.forEach(row => {
-            // Flexible column detection for SKU, Name, Price, Qty
-            const sku = String(row['SKU'] || row['Sku'] || row['sku'] || row['CLAVE'] || row['Clave'] || row['Codigo'] || row['CÓDIGO'] || '').trim();
-            const nombre = String(row['NOMBRE'] || row['Nombre'] || row['DESCRIPCION'] || row['Descripcion'] || row['Producto'] || '').trim() || sku;
-            const precioRaw = row['PRECIO'] || row['Precio'] || row['P.PUBLICO'] || row['P.Publico'] || 0;
+            const sku = String(getValue(row, ['clave', 'sku', 'codigo', 'clavearticulo'])).trim();
+            const nombre = String(getValue(row, ['nombredelarticulo', 'nombre', 'descripcion', 'producto', 'articulo'])).trim() || sku;
+            
+            // Look specifically for 'preciopublico' first so it doesn't accidentally grab 'preciomayoreo'
+            const precioRaw = getValue(row, ['preciopublico', 'ppublico', 'precio', 'p.publico', 'precio1']);
             const precio = parseFloat(String(precioRaw).replace(/[^0-9.]/g, '')) || 0;
-            const copias = parseInt(row['CANTIDAD'] || row['Cantidad'] || row['COPIAS'] || row['Copias'] || 1) || 1;
-            const cat = String(row['CATEGORIA'] || row['Categoria'] || '').trim();
+            
+            const copias = parseInt(getValue(row, ['cantidad', 'copias', 'cant']) || 1) || 1;
+            const cat = String(getValue(row, ['categoria', 'cat'])).trim();
 
             if (sku) {
               newItems.push({
@@ -73,6 +93,7 @@ export default function LabelPrinterModal({ isOpen, onClose, initialProducts = [
                 nombre,
                 categoria: cat || 'Otros',
                 precio,
+                precioPublico: precio,
                 copias,
                 formato: isEarringCategory(cat, nombre) ? 'vertical' : 'horizontal'
               });
@@ -81,7 +102,7 @@ export default function LabelPrinterModal({ isOpen, onClose, initialProducts = [
 
           if (newItems.length > 0) {
             setExcelCatalog(newItems);
-            setExcelMsg({ type: 'success', text: `¡Se cargaron ${newItems.length} productos del Excel! Usa el buscador para seleccionar sólo las piezas que deseas imprimir.` });
+            setExcelMsg({ type: 'success', text: `¡Se cargaron ${newItems.length} productos del Excel con sus precios correctamente!` });
           } else {
             setExcelMsg({ type: 'error', text: 'No se encontraron columnas de SKU o Clave válidas en el Excel.' });
           }
