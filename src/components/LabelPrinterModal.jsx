@@ -521,12 +521,7 @@ export default function LabelPrinterModal({ isOpen, onClose, initialProducts = [
 
           <button className="btn btn-gold" onClick={() => setShowDesigner(true)} style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)' }}>
             <RefreshCw size={16} />
-            <span>🎨 Diseñador BarTender / LabelJoy</span>
-          </button>
-
-          <button className="btn btn-outline" onClick={handleGeneratePDF} disabled={activeQueue.length === 0} title="Genera un PDF con tamaño 63x11mm por hoja">
-            <Printer size={16} />
-            <span>📄 PDF</span>
+            <span>🎨 Diseñador</span>
           </button>
 
           <button
