@@ -351,7 +351,7 @@ export default function LabelPrinterModal({ isOpen, onClose, initialProducts = [
         tspl += `BAR 245,4,2,80\r\n`;
         tspl += `TEXT 360,75,"2",90,1,1,"${skuEscaped}  $${item.precio}"\r\n`;
       } else {
-        // 1. Left Half: Cleaned Product Name + SKU Line (Strict 10 chars/line, 14-dot vertical spacing, mathematically centered)
+        // 1. Left Half: Cleaned Product Name + SKU Line (12 chars max/line, 14-dot vertical spacing, mathematically centered)
         const leftLines = getJewelryLeftLines(item.nombre, item.sku);
         leftLines.forEach((l, idx) => {
           const textWidth = l.length * 8;

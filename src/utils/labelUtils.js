@@ -26,7 +26,7 @@ export function getJewelryLeftLines(rawNombre = '', rawSku = '') {
   const words = name.replace(/-/g, ' ').split(/\s+/).filter(Boolean);
   let descLines = [];
   let cur = "";
-  const maxCharsPerLine = 10; // STRICT 10 CHARS MAX PER LINE -> Guarantees zero overlap with right box ($/Barcode)
+  const maxCharsPerLine = 12; // 12 CHARS MAX PER LINE -> Fits full words like CRISTALNEGRO without cutoff, 100% centered
 
   words.forEach(w => {
     if ((cur + " " + w).trim().length <= maxCharsPerLine) {
@@ -39,7 +39,7 @@ export function getJewelryLeftLines(rawNombre = '', rawSku = '') {
   if (cur) descLines.push(cur);
 
   const resultLines = descLines.slice(0, 3);
-  const skuLeft = sku.length > 10 ? sku.substring(0, 10) : sku;
+  const skuLeft = sku.length > 12 ? sku.substring(0, 12) : sku;
   if (skuLeft) resultLines.push(skuLeft);
 
   return resultLines;
@@ -84,7 +84,7 @@ export function convertElementsToTSPL(elements, product, copies = 1) {
         const words = content.replace(/-/g, ' ').split(/\s+/).filter(Boolean);
         let lines = [];
         let cur = "";
-        const maxCharsPerLine = 10;
+        const maxCharsPerLine = 12;
 
         words.forEach(w => {
           if ((cur + " " + w).trim().length <= maxCharsPerLine) {
@@ -117,7 +117,7 @@ export function convertElementsToTSPL(elements, product, copies = 1) {
       }
 
       if (el.field === 'sku') {
-        content = sku.length > 10 ? sku.substring(0, 10) : sku;
+        content = sku.length > 12 ? sku.substring(0, 12) : sku;
       } else if (el.field === 'precio') {
         content = `${el.prefix || ''}${product.precioPublico || product.precio || 0}.00`;
       } else if (el.field === 'sku_precio') {
