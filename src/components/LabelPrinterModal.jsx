@@ -916,46 +916,54 @@ function SingleLabelPreview({ item, scale = 3.2 }) {
           </div>
         </div>
       ) : (
-        /* FORMAT A: Standard Horizontal (Nombre + $Precio + Barcode Code128 + SKU) */
+        /* FORMAT A: Horizontal Rat-Tail Jewelry Flag Label (32mm Printable Head + 31mm Blank Right Tail) */
         <div style={{ width: '100%', height: '100%', display: 'flex' }}>
-          {/* Left Side: Product Name */}
+          {/* Left Box (16mm / 26% width): Product Name + SKU */}
           <div style={{
-            width: '42%',
+            width: '26%',
             height: '100%',
-            borderRight: '1.5px solid #000',
-            padding: '2px 4px',
+            padding: '2px 3px',
             display: 'flex',
-            alignItems: 'center',
+            flexDirection: 'column',
             justifyContent: 'center',
-            textAlign: 'center',
+            alignItems: 'flex-start',
+            fontSize: '7px',
             fontWeight: 'bold',
-            fontSize: nameFontSize,
             lineHeight: '1.15',
-            wordBreak: 'break-word',
             textTransform: 'uppercase'
           }}>
-            {item.nombre}
+            <div>{item.nombre ? item.nombre.substring(0, 18) : ''}</div>
+            <div style={{ fontSize: '6.5px', fontFamily: 'monospace', marginTop: '1px' }}>{item.sku}</div>
           </div>
 
-          {/* Right Side: Price & Code128 Barcode */}
+          {/* Right Box (16mm / 26% width): Price ($), Barcode Code128, SKU */}
           <div style={{
-            width: '58%',
+            width: '26%',
             height: '100%',
             display: 'flex',
             flexDirection: 'column',
-            justifyContent: 'space-between',
-            padding: '2px 4px',
-            alignItems: 'center'
+            justifyContent: 'space-around',
+            alignItems: 'center',
+            padding: '1px 2px'
           }}>
-            <div style={{ width: '100%', textAlign: 'right', fontWeight: 'bold', fontSize: '11px' }}>
-              $ {item.precio}.00
-            </div>
+            <div style={{ fontWeight: 'bold', fontSize: '8px' }}>${item.precio}.00</div>
+            <svg ref={barcodeRef} style={{ width: '90%', height: '14px' }}></svg>
+            <div style={{ fontFamily: 'monospace', fontSize: '6.5px', fontWeight: 'bold' }}>{item.sku}</div>
+          </div>
 
-            <svg ref={barcodeRef} style={{ width: '90%', height: '18px' }}></svg>
-
-            <div style={{ fontWeight: 'bold', fontFamily: 'monospace', fontSize: skuFontSize, lineHeight: 1 }}>
-              {item.sku}
-            </div>
+          {/* Long Right Adhesive Tail (31mm / 48% width): COMPLETELY BLANK */}
+          <div style={{
+            width: '48%',
+            height: '100%',
+            background: 'rgba(0, 0, 0, 0.03)',
+            borderLeft: '1px dashed #ddd',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#aaa',
+            fontSize: '7px'
+          }}>
+            (Patilla Adhesiva)
           </div>
         </div>
       )}
