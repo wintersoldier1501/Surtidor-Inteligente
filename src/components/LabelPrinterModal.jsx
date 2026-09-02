@@ -18,6 +18,7 @@ export default function LabelPrinterModal({ isOpen, onClose, initialProducts = [
         categoria: p.categoria || 'Otros',
         precio: p.precioPublico || 0,
         copias: 1,
+        seleccionado: true,
         // Auto-detect format: Aretes & Piercings default to 'vertical', others default to 'horizontal'
         formato: isEarringCategory(p.categoria, p.nombre) ? 'vertical' : 'horizontal'
       }));
@@ -133,8 +134,16 @@ export default function LabelPrinterModal({ isOpen, onClose, initialProducts = [
     setPrintQueue(prev => prev.filter((_, i) => i !== index));
   };
 
-  // Total Labels Count
-  const totalLabelsToPrint = printQueue.reduce((acc, item) => acc + (parseInt(item.copias) || 1), 0);
+  // Bulk Select / Deselect
+  const handleSelectAll = (val) => {
+    setPrintQueue(prev => prev.map(item => ({ ...item, seleccionado: val })));
+  };
+
+  // Active Queue (only selected items)
+  const activeQueue = printQueue.filter(item => item.seleccionado !== false);
+
+  // Total Labels Count for Active Selected Queue
+  const totalLabelsToPrint = activeQueue.reduce((acc, item) => acc + (parseInt(item.copias) || 1), 0);
 
   // Trigger Native Browser Print Dialog
   const handlePrint = () => {
@@ -262,36 +271,73 @@ export default function LabelPrinterModal({ isOpen, onClose, initialProducts = [
           {/* Tab 1: Queue Actions */}
           {activeTab === 'queue' && (
             <div style={{ padding: '16px', flex: 1, overflowY: 'auto' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                 <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                  Total en cola: <strong>{printQueue.length} artículos</strong> ({totalLabelsToPrint} copias)
+                  Imprimir: <strong style={{ color: 'var(--gold-primary)' }}>{activeQueue.length} de {printQueue.length}</strong> ({totalLabelsToPrint} copias)
                 </span>
                 {printQueue.length > 0 && (
                   <button
                     className="btn btn-outline"
                     onClick={() => setPrintQueue([])}
-                    style={{ padding: '4px 8px', fontSize: '0.75rem', borderColor: 'rgba(239, 68, 68, 0.4)', color: '#f87171' }}
+                    style={{ padding: '3px 8px', fontSize: '0.72rem', borderColor: 'rgba(239, 68, 68, 0.4)', color: '#f87171' }}
                   >
-                    <Trash2 size={12} /> Limpiar Cola
+                    <Trash2 size={12} /> Limpiar
                   </button>
                 )}
               </div>
+
+              {printQueue.length > 0 && (
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '14px' }}>
+                  <button
+                    className="btn btn-outline"
+                    onClick={() => handleSelectAll(true)}
+                    style={{ padding: '4px 10px', fontSize: '0.75rem', flex: 1 }}
+                  >
+                    ☑️ Seleccionar Todo
+                  </button>
+                  <button
+                    className="btn btn-outline"
+                    onClick={() => handleSelectAll(false)}
+                    style={{ padding: '4px 10px', fontSize: '0.75rem', flex: 1 }}
+                  >
+                    ☐ Deseleccionar Todo
+                  </button>
+                </div>
+              )}
 
               {printQueue.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '40px 16px', color: 'var(--text-muted)' }}>
                   <Tag size={40} style={{ opacity: 0.3, marginBottom: '12px' }} />
                   <p style={{ fontSize: '0.9rem' }}>No hay etiquetas en la lista.</p>
-                  <p style={{ fontSize: '0.8rem', marginTop: '6px' }}>Busca productos del catálogo o carga un Excel para generar tus etiquetas.</p>
+                  <p style={{ fontSize: '0.8rem', marginTop: '6px' }}>Busca productos del catálogo o carga un Excel para generar tus etiquetas libremente.</p>
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   {printQueue.map((item, idx) => (
-                    <div key={idx} style={{ padding: '12px', background: '#0e0e0e', border: '1px solid var(--border-color)', borderRadius: '8px' }}>
+                    <div
+                      key={idx}
+                      style={{
+                        padding: '12px',
+                        background: '#0e0e0e',
+                        border: item.seleccionado ? '1px solid var(--gold-primary)' : '1px solid var(--border-color)',
+                        borderRadius: '8px',
+                        opacity: item.seleccionado ? 1 : 0.45,
+                        transition: 'all 0.15s'
+                      }}
+                    >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                        <span style={{ color: 'var(--gold-primary)', fontWeight: 'bold', fontFamily: 'monospace', fontSize: '0.9rem' }}>{item.sku}</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <input
+                            type="checkbox"
+                            checked={item.seleccionado !== false}
+                            onChange={(e) => updateQueueItem(idx, 'seleccionado', e.target.checked)}
+                            style={{ width: '16px', height: '16px', accentColor: 'var(--gold-primary)', cursor: 'pointer' }}
+                          />
+                          <span style={{ color: 'var(--gold-primary)', fontWeight: 'bold', fontFamily: 'monospace', fontSize: '0.9rem' }}>{item.sku}</span>
+                        </div>
                         <span style={{ color: '#fff', fontWeight: 'bold', fontSize: '0.9rem' }}>${item.precio}</span>
                       </div>
-                      <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginBottom: '10px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginBottom: '10px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingLeft: '26px' }}>
                         {item.nombre}
                       </p>
 
@@ -308,15 +354,18 @@ export default function LabelPrinterModal({ isOpen, onClose, initialProducts = [
                         </select>
 
                         {/* Copies selector */}
-                        <input
-                          type="number"
-                          min={1}
-                          max={500}
-                          value={item.copias}
-                          onChange={(e) => updateQueueItem(idx, 'copias', parseInt(e.target.value) || 1)}
-                          style={{ width: '60px', padding: '4px 6px', fontSize: '0.8rem', textAlign: 'center' }}
-                          className="input-field"
-                        />
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Copias:</span>
+                          <input
+                            type="number"
+                            min={1}
+                            max={500}
+                            value={item.copias}
+                            onChange={(e) => updateQueueItem(idx, 'copias', parseInt(e.target.value) || 1)}
+                            style={{ width: '50px', padding: '4px 6px', fontSize: '0.8rem', textAlign: 'center' }}
+                            className="input-field"
+                          />
+                        </div>
 
                         <button
                           onClick={() => removeQueueItem(idx)}
@@ -445,15 +494,16 @@ export default function LabelPrinterModal({ isOpen, onClose, initialProducts = [
             VISTA PREVIA EN PANTALLA (MEDIDA EXACTA 63mm x 11mm PARA RIBETEC RT-420ME / TSC T-200)
           </div>
 
-          {printQueue.length === 0 ? (
+          {activeQueue.length === 0 ? (
             <div style={{ margin: 'auto', textAlign: 'center', color: 'var(--text-muted)' }}>
               <Printer size={64} style={{ opacity: 0.2, marginBottom: '16px' }} />
-              <p style={{ fontSize: '1.1rem' }}>No hay etiquetas cargadas para vista previa.</p>
+              <p style={{ fontSize: '1.1rem' }}>No hay etiquetas seleccionadas para vista previa o impresión.</p>
+              <p style={{ fontSize: '0.85rem', marginTop: '6px' }}>Marca las casillas ☑️ de las etiquetas que deseas imprimir en el panel izquierdo.</p>
             </div>
           ) : (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', justifyContent: 'center' }}>
-              {printQueue.map((item, idx) => (
-                <div key={idx} style={{ background: '#111', padding: '12px', borderRadius: '10px', border: '1px solid var(--border-color)' }}>
+              {activeQueue.map((item, idx) => (
+                <div key={idx} style={{ background: '#111', padding: '12px', borderRadius: '10px', border: '1px solid var(--gold-primary)' }}>
                   <div style={{ fontSize: '0.75rem', color: 'var(--gold-primary)', marginBottom: '8px', fontWeight: 'bold', display: 'flex', justifyContent: 'space-between' }}>
                     <span>Etiqueta {idx + 1} ({item.copias} {item.copias === 1 ? 'copia' : 'copias'})</span>
                     <span>{item.formato === 'vertical' ? '👂 Vertical Aretes' : '🏷️ Estándar'}</span>
@@ -472,7 +522,7 @@ export default function LabelPrinterModal({ isOpen, onClose, initialProducts = [
 
       {/* PRINT-ONLY CONTAINER (Renders actual printable labels when window.print() is called) */}
       <div className="print-only">
-        {printQueue.flatMap((item) =>
+        {activeQueue.flatMap((item) =>
           Array.from({ length: Math.max(1, parseInt(item.copias) || 1) }).map((_, cIdx) => (
             <PrintableSingleLabel key={`${item.sku}-${cIdx}`} item={item} />
           ))

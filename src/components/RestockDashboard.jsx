@@ -11,6 +11,7 @@ export default function RestockDashboard({ products, onOpenImageModal, onToggleN
   const [omitExcluidos, setOmitExcluidos] = useState(true);
   const [copiedMsg, setCopiedMsg] = useState(false);
   const [showLabelModal, setShowLabelModal] = useState(false);
+  const [selectedSkusForLabels, setSelectedSkusForLabels] = useState([]);
 
   // Compute items that require restocking for Paseo Durango
   const restockAnalysis = useMemo(() => {
@@ -109,7 +110,11 @@ export default function RestockDashboard({ products, onOpenImageModal, onToggleN
         <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
           <button className="btn btn-gold" onClick={() => setShowLabelModal(true)} style={{ background: 'linear-gradient(135deg, #059669 0%, #047857 100%)' }}>
             <Tag size={18} />
-            <span>🏷️ Generar Etiquetas</span>
+            <span>
+              {selectedSkusForLabels.length > 0
+                ? `🏷️ Generar Etiquetas (${selectedSkusForLabels.length} seleccionados)`
+                : '🏷️ Generar Etiquetas'}
+            </span>
           </button>
 
           <button className="btn btn-outline" onClick={handleCopyWhatsApp}>
@@ -128,158 +133,167 @@ export default function RestockDashboard({ products, onOpenImageModal, onToggleN
       <div className="glass-card no-print" style={{ marginBottom: '24px', padding: '18px 24px' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px', alignItems: 'center' }}>
           
-          {/* Threshold selector */}
+          {/* Paseo Stock Criterion Dropdown */}
           <div>
-            <label style={{ fontSize: '0.8rem', color: 'var(--gold-primary)', fontWeight: '600', display: 'block', marginBottom: '6px' }}>
+            <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--gold-primary)', fontWeight: 'bold', marginBottom: '6px', letterSpacing: '0.5px' }}>
               CRITERIO DE REPOSICIÓN EN PASEO:
             </label>
             <select
               className="input-field"
               value={paseoThreshold}
               onChange={(e) => setPaseoThreshold(Number(e.target.value))}
+              style={{ width: '100%' }}
             >
-              <option value={0}>Surtir cuando existan 0 piezas en Paseo Durango</option>
-              <option value={1}>Surtir cuando existan 1 o 0 piezas en Paseo Durango</option>
-              <option value={2}>Surtir cuando existan 2 o menos piezas en Paseo Durango</option>
+              <option value={0}>Surtir cuando existan 0 piezas en Paseo (Stock Agotado)</option>
+              <option value={1}>Surtir cuando existan 1 o menos piezas en Paseo</option>
+              <option value={2}>Surtir cuando existan 2 o menos piezas en Paseo</option>
+              <option value={3}>Surtir cuando existan 3 o menos piezas en Paseo</option>
+              <option value={4}>Surtir cuando existan 4 o menos piezas en Paseo</option>
             </select>
           </div>
 
-          {/* Excluded items filter */}
+          {/* Exclusion Filter Dropdown */}
           <div>
-            <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600', display: 'block', marginBottom: '6px' }}>
+            <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--gold-primary)', fontWeight: 'bold', marginBottom: '6px', letterSpacing: '0.5px' }}>
               FILTRO DE EXCLUSIONES:
             </label>
             <select
               className="input-field"
               value={omitExcluidos ? 'omitir' : 'mostrar'}
               onChange={(e) => setOmitExcluidos(e.target.value === 'omitir')}
+              style={{ width: '100%' }}
             >
-              <option value="omitir">🚫 Omitir no vendibles en Paseo ({products.filter(p => p.noSurtirPaseo).length})</option>
-              <option value="mostrar">👁️ Incluir también piezas excluidas</option>
+              <option value="omitir">🚫 Omitir no vendibles en Paseo Durango</option>
+              <option value="mostrar">👁️ Mostrar todos los productos</option>
             </select>
           </div>
 
-          {/* Category filter */}
+          {/* Category Dropdown */}
           <div>
-            <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600', display: 'block', marginBottom: '6px' }}>
+            <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--gold-primary)', fontWeight: 'bold', marginBottom: '6px', letterSpacing: '0.5px' }}>
               CATEGORÍA:
             </label>
             <select
               className="input-field"
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
+              style={{ width: '100%' }}
             >
-              {categories.map(cat => (
+              {categories.map((cat) => (
                 <option key={cat} value={cat}>{cat}</option>
               ))}
             </select>
           </div>
 
-          {/* Priority filter */}
+          {/* Priority Star Filter Dropdown */}
           <div>
-            <label style={{ fontSize: '0.8rem', color: 'var(--gold-primary)', fontWeight: '600', display: 'block', marginBottom: '6px' }}>
+            <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--gold-primary)', fontWeight: 'bold', marginBottom: '6px', letterSpacing: '0.5px' }}>
               PRIORIDAD REPOSICIÓN:
             </label>
             <select
               className="input-field"
               value={prioridadFilter}
               onChange={(e) => setPrioridadFilter(e.target.value)}
+              style={{ width: '100%' }}
             >
               <option value="todas">👁️ Mostrar Todo el Surtido</option>
-              <option value="estrellas">⭐ Solo Productos Estrella ({products.filter(p => p.esEstrella).length})</option>
-              <option value="normales">📦 Productos Normales ({products.filter(p => !p.esEstrella).length})</option>
+              <option value="estrellas">⭐ Solo Productos Estrella / Prioridad Top</option>
+              <option value="normales">📦 Productos Normales</option>
             </select>
           </div>
 
-          {/* Search bar */}
+          {/* Search Input */}
           <div>
-            <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600', display: 'block', marginBottom: '6px' }}>
+            <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--gold-primary)', fontWeight: 'bold', marginBottom: '6px', letterSpacing: '0.5px' }}>
               BUSCAR PIEZA O CÓDIGO:
             </label>
             <div style={{ position: 'relative' }}>
               <input
                 type="text"
-                className="input-field"
                 placeholder="Ej. AX056, Aretes..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                style={{ paddingLeft: '38px' }}
+                className="input-field"
+                style={{ width: '100%', paddingLeft: '36px' }}
               />
-              <Search size={18} color="var(--text-muted)" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
+              <Search size={16} color="var(--text-muted)" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
             </div>
           </div>
 
         </div>
       </div>
 
-      {/* Summary KPI Cards (No Print) */}
-      <div className="no-print" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px', marginBottom: '24px' }}>
+      {/* Main Analysis Cards (Sub-tabs) */}
+      <div className="no-print" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px', marginBottom: '32px' }}>
         
-        {/* Card 1: Tomar de Almacen General */}
+        {/* Card 1: Almacén General */}
         <div
           onClick={() => setActiveSubTab('general')}
-          className="glass-card"
+          className={`stat-card ${activeSubTab === 'general' ? 'active' : ''}`}
           style={{
             cursor: 'pointer',
-            border: activeSubTab === 'general' ? '2px solid var(--success)' : '1px solid var(--border-color)',
-            background: activeSubTab === 'general' ? 'rgba(16, 185, 129, 0.08)' : 'var(--bg-card)',
-            transition: 'all 0.2s'
+            border: activeSubTab === 'general' ? '2px solid #34d399' : '1px solid var(--border-color)',
+            background: activeSubTab === 'general' ? 'rgba(52, 211, 153, 0.05)' : 'var(--bg-card)'
           }}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.85rem', color: '#34d399', fontWeight: '600', textTransform: 'uppercase' }}>1. Almacén General</span>
-            <PackageCheck size={24} color="#34d399" />
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+            <span style={{ fontSize: '0.85rem', color: '#34d399', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              1. Almacén General
+            </span>
+            <PackageCheck color="#34d399" size={24} />
           </div>
-          <div style={{ fontSize: '2.2rem', fontWeight: '700', color: '#fff', margin: '8px 0' }}>
+          <div style={{ fontSize: '2.4rem', fontWeight: 'bold', color: '#fff', marginBottom: '4px' }}>
             {restockAnalysis.surtirGeneral.length} <span style={{ fontSize: '1rem', color: 'var(--text-muted)', fontWeight: 'normal' }}>piezas</span>
           </div>
-          <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+          <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
             Listas para recoger del Almacén General en Vista Hermosa.
           </p>
         </div>
 
-        {/* Card 2: Orden de Trabajo Taller */}
+        {/* Card 2: Orden a Taller */}
         <div
           onClick={() => setActiveSubTab('taller')}
-          className="glass-card"
+          className={`stat-card ${activeSubTab === 'taller' ? 'active' : ''}`}
           style={{
             cursor: 'pointer',
             border: activeSubTab === 'taller' ? '2px solid #c084fc' : '1px solid var(--border-color)',
-            background: activeSubTab === 'taller' ? 'rgba(192, 132, 252, 0.08)' : 'var(--bg-card)',
-            transition: 'all 0.2s'
+            background: activeSubTab === 'taller' ? 'rgba(192, 132, 252, 0.05)' : 'var(--bg-card)'
           }}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.85rem', color: '#c084fc', fontWeight: '600', textTransform: 'uppercase' }}>2. Orden a Taller</span>
-            <Hammer size={24} color="#c084fc" />
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+            <span style={{ fontSize: '0.85rem', color: '#c084fc', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              2. Orden a Taller
+            </span>
+            <Hammer color="#c084fc" size={24} />
           </div>
-          <div style={{ fontSize: '2.2rem', fontWeight: '700', color: '#fff', margin: '8px 0' }}>
+          <div style={{ fontSize: '2.4rem', fontWeight: 'bold', color: '#fff', marginBottom: '4px' }}>
             {restockAnalysis.ordenTaller.length} <span style={{ fontSize: '1rem', color: 'var(--text-muted)', fontWeight: 'normal' }}>piezas</span>
           </div>
-          <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+          <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
             En 0 en Almacén General, pero etiquetadas como <strong>Procedencia Taller</strong>.
           </p>
         </div>
 
-        {/* Card 3: Agotados */}
+        {/* Card 3: Agotados de Proveedor */}
         <div
           onClick={() => setActiveSubTab('agotados')}
-          className="glass-card"
+          className={`stat-card ${activeSubTab === 'agotados' ? 'active' : ''}`}
           style={{
             cursor: 'pointer',
-            border: activeSubTab === 'agotados' ? '2px solid var(--danger)' : '1px solid var(--border-color)',
-            background: activeSubTab === 'agotados' ? 'rgba(239, 68, 68, 0.08)' : 'var(--bg-card)',
-            transition: 'all 0.2s'
+            border: activeSubTab === 'agotados' ? '2px solid #f87171' : '1px solid var(--border-color)',
+            background: activeSubTab === 'agotados' ? 'rgba(248, 113, 113, 0.05)' : 'var(--bg-card)'
           }}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.85rem', color: '#f87171', fontWeight: '600', textTransform: 'uppercase' }}>3. Agotados Proveedor</span>
-            <AlertTriangle size={24} color="#f87171" />
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+            <span style={{ fontSize: '0.85rem', color: '#f87171', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              3. Agotados Proveedor
+            </span>
+            <AlertTriangle color="#f87171" size={24} />
           </div>
-          <div style={{ fontSize: '2.2rem', fontWeight: '700', color: '#fff', margin: '8px 0' }}>
+          <div style={{ fontSize: '2.4rem', fontWeight: 'bold', color: '#fff', marginBottom: '4px' }}>
             {restockAnalysis.agotados.length} <span style={{ fontSize: '1rem', color: 'var(--text-muted)', fontWeight: 'normal' }}>piezas</span>
           </div>
-          <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+          <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
             En 0 en Almacén General (requiere pedido a Proveedor).
           </p>
         </div>
@@ -311,6 +325,25 @@ export default function RestockDashboard({ products, onOpenImageModal, onToggleN
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--gold-primary)', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  <th style={{ padding: '12px 8px', textAlign: 'center' }}>
+                    <input
+                      type="checkbox"
+                      checked={
+                        getCurrentList(activeSubTab, restockAnalysis).length > 0 &&
+                        getCurrentList(activeSubTab, restockAnalysis).every(item => selectedSkusForLabels.includes(item.sku))
+                      }
+                      onChange={(e) => {
+                        const currentSkus = getCurrentList(activeSubTab, restockAnalysis).map(i => i.sku);
+                        if (e.target.checked) {
+                          setSelectedSkusForLabels(prev => Array.from(new Set([...prev, ...currentSkus])));
+                        } else {
+                          setSelectedSkusForLabels(prev => prev.filter(sku => !currentSkus.includes(sku)));
+                        }
+                      }}
+                      style={{ width: '16px', height: '16px', accentColor: 'var(--gold-primary)', cursor: 'pointer' }}
+                      title="Seleccionar todo para etiquetas"
+                    />
+                  </th>
                   <th style={{ padding: '12px 16px' }}>Foto</th>
                   <th style={{ padding: '12px 16px' }}>Clave (SKU)</th>
                   <th style={{ padding: '12px 16px' }}>Nombre del Artículo</th>
@@ -325,6 +358,22 @@ export default function RestockDashboard({ products, onOpenImageModal, onToggleN
               <tbody>
                 {getCurrentList(activeSubTab, restockAnalysis).map((item) => (
                   <tr key={item.sku} style={{ borderBottom: '1px solid var(--border-color)', transition: 'background 0.15s' }}>
+                    
+                    {/* Checkbox for label selection */}
+                    <td style={{ padding: '12px 8px', textAlign: 'center' }}>
+                      <input
+                        type="checkbox"
+                        checked={selectedSkusForLabels.includes(item.sku)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedSkusForLabels(prev => [...prev, item.sku]);
+                          } else {
+                            setSelectedSkusForLabels(prev => prev.filter(s => s !== item.sku));
+                          }
+                        }}
+                        style={{ width: '16px', height: '16px', accentColor: 'var(--gold-primary)', cursor: 'pointer' }}
+                      />
+                    </td>
                     
                     {/* Thumbnail / Image */}
                     <td style={{ padding: '12px 16px' }}>
@@ -464,7 +513,11 @@ export default function RestockDashboard({ products, onOpenImageModal, onToggleN
       <LabelPrinterModal
         isOpen={showLabelModal}
         onClose={() => setShowLabelModal(false)}
-        initialProducts={getCurrentList(activeSubTab, restockAnalysis)}
+        initialProducts={
+          selectedSkusForLabels.length > 0
+            ? products.filter(p => selectedSkusForLabels.includes(p.sku))
+            : getCurrentList(activeSubTab, restockAnalysis)
+        }
         allProducts={products}
       />
 
