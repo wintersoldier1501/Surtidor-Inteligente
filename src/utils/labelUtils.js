@@ -26,7 +26,7 @@ export function getJewelryLeftLines(rawNombre = '', rawSku = '') {
   const words = name.replace(/-/g, ' ').split(/\s+/).filter(Boolean);
   let descLines = [];
   let cur = "";
-  const maxCharsPerLine = 15; // Increased to 15 chars so full description words fit cleanly
+  const maxCharsPerLine = 10; // STRICT 10 CHARS MAX PER LINE -> Guarantees zero overlap with right box ($/Barcode)
 
   words.forEach(w => {
     if ((cur + " " + w).trim().length <= maxCharsPerLine) {
@@ -39,7 +39,7 @@ export function getJewelryLeftLines(rawNombre = '', rawSku = '') {
   if (cur) descLines.push(cur);
 
   const resultLines = descLines.slice(0, 3);
-  const skuLeft = sku.length > 12 ? sku.substring(0, 12) : sku;
+  const skuLeft = sku.length > 10 ? sku.substring(0, 10) : sku;
   if (skuLeft) resultLines.push(skuLeft);
 
   return resultLines;
@@ -84,7 +84,7 @@ export function convertElementsToTSPL(elements, product, copies = 1) {
         const words = content.replace(/-/g, ' ').split(/\s+/).filter(Boolean);
         let lines = [];
         let cur = "";
-        const maxCharsPerLine = 15;
+        const maxCharsPerLine = 10;
 
         words.forEach(w => {
           if ((cur + " " + w).trim().length <= maxCharsPerLine) {
@@ -96,12 +96,12 @@ export function convertElementsToTSPL(elements, product, copies = 1) {
         });
         if (cur) lines.push(cur);
 
-        const ySpacing = 12;
+        const ySpacing = 14;
         const fontType = "1";
 
         lines.slice(0, 3).forEach((lineText, idx) => {
           let lineX = xDots;
-          const charWidth = 7;
+          const charWidth = 8;
           const textWidth = lineText.length * charWidth;
 
           if (el.align === 'center') {
@@ -117,7 +117,7 @@ export function convertElementsToTSPL(elements, product, copies = 1) {
       }
 
       if (el.field === 'sku') {
-        content = sku.length > 12 ? sku.substring(0, 12) : sku;
+        content = sku.length > 10 ? sku.substring(0, 10) : sku;
       } else if (el.field === 'precio') {
         content = `${el.prefix || ''}${product.precioPublico || product.precio || 0}.00`;
       } else if (el.field === 'sku_precio') {
@@ -127,7 +127,7 @@ export function convertElementsToTSPL(elements, product, copies = 1) {
       }
 
       const fontType = "1";
-      const charWidth = 7;
+      const charWidth = 8;
       const textWidth = content.length * charWidth;
       let textX = xDots;
 

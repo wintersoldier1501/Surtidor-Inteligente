@@ -148,9 +148,9 @@ export default function BarTenderLabelDesigner({
 
     const leftLines = getJewelryLeftLines(testProduct.nombre, testProduct.sku);
     leftLines.forEach((l, idx) => {
-      const textWidth = l.length * 7;
-      const lineX = Math.max(1, 55 - Math.round(textWidth / 2));
-      const yPos = 3 + (idx * 12);
+      const textWidth = l.length * 8;
+      const lineX = Math.max(2, 55 - Math.round(textWidth / 2));
+      const yPos = 4 + (idx * 14);
       tspl += `TEXT ${lineX},${yPos},"1",0,1,1,"${l}"\r\n`;
     });
 
