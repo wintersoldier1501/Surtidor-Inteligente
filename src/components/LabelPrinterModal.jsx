@@ -152,7 +152,7 @@ export default function LabelPrinterModal({ isOpen, onClose, initialProducts = [
 
     try {
       const doc = new jsPDF({
-        orientation: 'landscape',
+        orientation: 'portrait',
         unit: 'mm',
         format: [63, 11]
       });
@@ -161,9 +161,28 @@ export default function LabelPrinterModal({ isOpen, onClose, initialProducts = [
 
       activeQueue.forEach(item => {
         const copies = Math.max(1, parseInt(item.copias) || 1);
+        
+        // Render Code128 Barcode as image for PDF
+        let barcodeDataUrl = null;
+        if (item.formato === 'horizontal' && item.sku) {
+          try {
+            const canvas = document.createElement('canvas');
+            JsBarcode(canvas, item.sku, {
+              format: "CODE128",
+              width: 2,
+              height: 35,
+              displayValue: false,
+              margin: 0
+            });
+            barcodeDataUrl = canvas.toDataURL('image/png');
+          } catch (e) {
+            console.warn('Barcode PDF render error:', e);
+          }
+        }
+
         for (let c = 0; c < copies; c++) {
           if (pageIndex > 0) {
-            doc.addPage([63, 11], 'landscape');
+            doc.addPage([63, 11], 'portrait');
           }
 
           if (item.formato === 'vertical') {
@@ -172,25 +191,34 @@ export default function LabelPrinterModal({ isOpen, onClose, initialProducts = [
             doc.text(`${item.sku}  $${item.precio}`, 15, 6, { angle: 90 });
             doc.text(`${item.sku}  $${item.precio}`, 45, 6, { angle: 90 });
           } else {
+            // Divider line between name and price/barcode
             doc.setLineWidth(0.3);
             doc.line(26, 0, 26, 11);
 
+            // Product Name (left side)
             doc.setFontSize(7);
             doc.setFont('helvetica', 'bold');
             const splitTitle = doc.splitTextToSize((item.nombre || '').toUpperCase(), 24);
-            doc.text(splitTitle, 13, 4, { align: 'center' });
+            doc.text(splitTitle, 13, 4.2, { align: 'center' });
 
+            // Price (top right)
             doc.setFontSize(8);
-            doc.text(`$ ${item.precio}.00`, 60, 3.5, { align: 'right' });
+            doc.text(`$ ${item.precio}.00`, 60, 3.2, { align: 'right' });
+
+            // Barcode (middle right)
+            if (barcodeDataUrl) {
+              doc.addImage(barcodeDataUrl, 'PNG', 28, 4, 32, 4);
+            }
+
+            // SKU (bottom right)
             doc.setFontSize(7);
-            doc.text(item.sku, 44, 9.5, { align: 'center' });
+            doc.text(item.sku, 44, 9.8, { align: 'center' });
           }
 
           pageIndex++;
         }
       });
 
-      doc.autoPrint();
       const pdfBlob = doc.output('bloburl');
       window.open(pdfBlob, '_blank');
     } catch (err) {
