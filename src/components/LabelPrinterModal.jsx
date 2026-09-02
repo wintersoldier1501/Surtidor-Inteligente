@@ -282,18 +282,21 @@ export default function LabelPrinterModal({ isOpen, onClose, initialProducts = [
         tspl += `BAR 245,4,2,80\r\n`;
         tspl += `TEXT 360,75,"2",90,1,1,"${skuEscaped}  $${item.precio}"\r\n`;
       } else {
-        // Horizontal standard Jewelry Foldable Tag (Identical to LabelShop):
-        // Left Face (Product Name + SKU in small FONT "1" stacked vertically):
+        // Horizontal Rat-Tail / Jewelry Flag Label (Exact LabelShop Layout):
+        // Total Printable Head is 32mm wide (0 to 256 dots).
+        // Long adhesive tail from 32mm to 63mm (256 to 504 dots) is left COMPLETELY BLANK!
+
+        // 1. Left Half of Printable Head (0 to 16mm / 0 to 128 dots): Product Name + SKU
         const words = nameEscaped.toUpperCase().replace(/-/g, ' ').split(/\s+/).filter(Boolean);
         let lines = [];
         let cur = "";
 
         words.forEach(w => {
-          if ((cur + " " + w).trim().length <= 11) {
+          if ((cur + " " + w).trim().length <= 10) {
             cur = (cur + " " + w).trim();
           } else {
             if (cur) lines.push(cur);
-            cur = w.substring(0, 11);
+            cur = w.substring(0, 10);
           }
         });
         if (cur) lines.push(cur);
@@ -306,12 +309,12 @@ export default function LabelPrinterModal({ isOpen, onClose, initialProducts = [
           tspl += `TEXT 16,${yPos},"1",0,1,1,"${l}"\r\n`;
         });
 
-        // Middle Neck (Patilla adhesiva): DEJAR EN BLANCO
+        // 2. Right Half of Printable Head (16mm to 32mm / 128 to 256 dots): Price ($), Barcode Code128, SKU
+        tspl += `TEXT 160,6,"2",0,1,1,"$ ${item.precio}.00"\r\n`;
+        tspl += `BARCODE 135,28,"128",20,0,0,1,2,"${skuEscaped}"\r\n`;
+        tspl += `TEXT 155,56,"1",0,1,1,"${skuEscaped}"\r\n`;
 
-        // Right Face: Price ($), Barcode Code128, SKU
-        tspl += `TEXT 360,6,"2",0,1,1,"$ ${item.precio}.00"\r\n`;
-        tspl += `BARCODE 300,28,"128",20,0,0,1,2,"${skuEscaped}"\r\n`;
-        tspl += `TEXT 330,56,"1",0,1,1,"${skuEscaped}"\r\n`;
+        // 3. Long Adhesive Tail (32mm to 63mm): LEFT COMPLETELY BLANK!
       }
       tspl += `PRINT ${copies},1\r\n`;
     });
