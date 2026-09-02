@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Tag, Move, Type, Barcode, Minimize2, RotateCw, Trash2, Plus, Save, RefreshCw, Printer, Download, Layout, Layers, Check } from 'lucide-react';
 import JsBarcode from 'jsbarcode';
 import jsPDF from 'jspdf';
+import { getJewelryLeftLines } from './LabelPrinterModal';
 
 // Default presets calibrated for 63mm x 11mm (32mm Head + 31mm Tail)
 const PRESET_TEMPLATES = {
@@ -143,28 +144,9 @@ export default function BarTenderLabelDesigner({
   // Direct Hardware Printing from Designer Canvas
   const handlePrintDirectFromDesigner = async () => {
     const skuEscaped = (testProduct.sku || '').replace(/"/g, '').toUpperCase();
-    const nameEscaped = (testProduct.nombre || '').replace(/"/g, '').toUpperCase().replace(/-/g, ' ');
-
     let tspl = 'SIZE 63 mm, 11 mm\r\nGAP 3 mm, 0 mm\r\nDIRECTION 1\r\nCLS\r\n';
 
-    const words = nameEscaped.split(/\s+/).filter(Boolean);
-    let lines = [];
-    let cur = "";
-
-    words.forEach(w => {
-      if ((cur + " " + w).trim().length <= 11) {
-        cur = (cur + " " + w).trim();
-      } else {
-        if (cur) lines.push(cur);
-        cur = w.length > 11 ? w.substring(0, 11) : w;
-      }
-    });
-    if (cur) lines.push(cur);
-
-    const leftLines = lines.slice(0, 3);
-    const skuLeftFormatted = skuEscaped.length > 10 ? skuEscaped.substring(0, 10) : skuEscaped;
-    leftLines.push(skuLeftFormatted);
-
+    const leftLines = getJewelryLeftLines(testProduct.nombre, testProduct.sku);
     leftLines.forEach((l, idx) => {
       const yPos = 4 + (idx * 15);
       tspl += `TEXT 10,${yPos},"1",0,1,1,"${l}"\r\n`;
@@ -202,22 +184,8 @@ export default function BarTenderLabelDesigner({
   const getFieldValue = (el, prod) => {
     const p = prod || testProduct;
     if (el.field === 'nombre') {
-      const nameStr = (p.nombre || 'NOMBRE PRODUCTO').toUpperCase().replace(/-/g, ' ');
-      const words = nameStr.split(/\s+/).filter(Boolean);
-      let lines = [];
-      let cur = "";
-
-      words.forEach(w => {
-        if ((cur + " " + w).trim().length <= 11) {
-          cur = (cur + " " + w).trim();
-        } else {
-          if (cur) lines.push(cur);
-          cur = w.length > 11 ? w.substring(0, 11) : w;
-        }
-      });
-      if (cur) lines.push(cur);
-
-      return lines.slice(0, 3).join('\n');
+      const leftLines = getJewelryLeftLines(p.nombre, p.sku);
+      return leftLines.join('\n');
     }
     if (el.field === 'sku') return p.sku || 'SKU123';
     if (el.field === 'precio') return `${el.prefix || ''}${p.precioPublico || p.precio || 0}.00`;

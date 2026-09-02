@@ -3,7 +3,50 @@ import { Tag, Printer, X, Plus, Trash2, Upload, Search, Check, AlertCircle, Refr
 import JsBarcode from 'jsbarcode';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
-import BarTenderLabelDesigner from './BarTenderLabelDesigner';
+// Helper to clean trailing SKU from name and wrap left box text into max 4 lines
+export function getJewelryLeftLines(rawNombre = '', rawSku = '') {
+  const sku = (rawSku || '').trim().toUpperCase();
+  let name = (rawNombre || '').trim().toUpperCase();
+
+  if (sku) {
+    const skuClean = sku.replace(/[^A-Z0-9]/g, '');
+    let nameWords = name.replace(/-/g, ' ').split(/\s+/).filter(Boolean);
+
+    while (nameWords.length > 0) {
+      const lastWord = nameWords[nameWords.length - 1].replace(/[^A-Z0-9]/g, '');
+      if (!lastWord) {
+        nameWords.pop();
+        continue;
+      }
+      if (skuClean.includes(lastWord) || (lastWord.length >= 3 && skuClean.startsWith(lastWord))) {
+        nameWords.pop();
+      } else {
+        break;
+      }
+    }
+    name = nameWords.join(' ');
+  }
+
+  const words = name.replace(/-/g, ' ').split(/\s+/).filter(Boolean);
+  let descLines = [];
+  let cur = "";
+
+  words.forEach(w => {
+    if ((cur + " " + w).trim().length <= 11) {
+      cur = (cur + " " + w).trim();
+    } else {
+      if (cur) descLines.push(cur);
+      cur = w.length > 11 ? w.substring(0, 11) : w;
+    }
+  });
+  if (cur) descLines.push(cur);
+
+  const resultLines = descLines.slice(0, 3);
+  const skuLeft = sku.length > 10 ? sku.substring(0, 10) : sku;
+  if (skuLeft) resultLines.push(skuLeft);
+
+  return resultLines;
+}
 
 export default function LabelPrinterModal({ isOpen, onClose, initialProducts = [], allProducts = [] }) {
   const [printQueue, setPrintQueue] = useState([]);
@@ -303,10 +346,22 @@ export default function LabelPrinterModal({ isOpen, onClose, initialProducts = [
         tspl += `TEXT 120,80,"3",90,1,1,"${skuEscaped}  $${item.precio}"\r\n`;
         tspl += `TEXT 360,80,"3",90,1,1,"${skuEscaped}  $${item.precio}"\r\n`;
       } else {
-        tspl += `TEXT 10,10,"2",0,1,1,"${nameEscaped.substring(0, 25)}"\r\n`;
-        tspl += `TEXT 350,10,"3",0,1,1,"$ ${item.precio}.00"\r\n`;
-        tspl += `BARCODE 250,30,"128",30,1,0,2,2,"${skuEscaped}"\r\n`;
-        tspl += `TEXT 280,70,"2",0,1,1,"${skuEscaped}"\r\n`;
+        const leftLines = getJewelryLeftLines(item.nombre, item.sku);
+        leftLines.forEach((l, idx) => {
+          const yPos = 4 + (idx * 15);
+          tspl += `TEXT 10,${yPos},"1",0,1,1,"${l}"\r\n`;
+        });
+
+        const priceText = `$ ${item.precio}.00`;
+        const isLongSku = skuEscaped.length > 9;
+
+        const barcodeX = isLongSku ? 112 : 122;
+        const skuRightX = isLongSku ? 118 : 135;
+        const priceX = isLongSku ? 128 : 138;
+
+        tspl += `TEXT ${priceX},4,"1",0,1,1,"${priceText}"\r\n`;
+        tspl += `BARCODE ${barcodeX},22,"128",24,0,0,1,2,"${skuEscaped.substring(0, 15)}"\r\n`;
+        tspl += `TEXT ${skuRightX},54,"1",0,1,1,"${skuEscaped.substring(0, 13)}"\r\n`;
       }
       tspl += `PRINT ${copies},1\r\n`;
     });
@@ -329,8 +384,7 @@ export default function LabelPrinterModal({ isOpen, onClose, initialProducts = [
 
     activeQueue.forEach(item => {
       const copies = Math.max(1, parseInt(item.copias) || 1);
-      const nameEscaped = (item.nombre || '').replace(/"/g, '');
-      const skuEscaped = (item.sku || '').replace(/"/g, '');
+      const skuEscaped = (item.sku || '').replace(/"/g, '').toUpperCase();
 
       tspl += `CLS\r\n`;
       if (item.formato === 'vertical') {
@@ -339,35 +393,14 @@ export default function LabelPrinterModal({ isOpen, onClose, initialProducts = [
         tspl += `BAR 245,4,2,80\r\n`;
         tspl += `TEXT 360,75,"2",90,1,1,"${skuEscaped}  $${item.precio}"\r\n`;
       } else {
-        // Horizontal Rat-Tail / Jewelry Flag Label (Exact LabelShop Layout):
-        // Total Printable Head is 32mm wide (0 to 256 dots).
-        // Long adhesive tail from 32mm to 63mm (256 to 504 dots) is left COMPLETELY BLANK!
-
-        // 1. Left Half of Printable Head (0 to 16mm): Product Name (compact 11 chars/line) + SKU
-        const words = nameEscaped.toUpperCase().replace(/-/g, ' ').split(/\s+/).filter(Boolean);
-        let lines = [];
-        let cur = "";
-
-        words.forEach(w => {
-          if ((cur + " " + w).trim().length <= 11) {
-            cur = (cur + " " + w).trim();
-          } else {
-            if (cur) lines.push(cur);
-            cur = w.length > 11 ? w.substring(0, 11) : w;
-          }
-        });
-        if (cur) lines.push(cur);
-
-        const leftLines = lines.slice(0, 3);
-        const skuLeftFormatted = skuEscaped.length > 10 ? skuEscaped.substring(0, 10) : skuEscaped;
-        leftLines.push(skuLeftFormatted);
-
+        // 1. Left Half: Cleaned Product Name + SKU Line
+        const leftLines = getJewelryLeftLines(item.nombre, item.sku);
         leftLines.forEach((l, idx) => {
           const yPos = 4 + (idx * 15);
           tspl += `TEXT 10,${yPos},"1",0,1,1,"${l}"\r\n`;
         });
 
-        // 2. Right Half of Printable Head: Price ($), Barcode Code128, SKU (Dynamic X alignment for long SKUs)
+        // 2. Right Half of Printable Head: Price ($), Barcode Code128, SKU
         const priceText = `$ ${item.precio}.00`;
         const isLongSku = skuEscaped.length > 9;
 
@@ -1037,13 +1070,14 @@ function SingleLabelPreview({ item, scale = 3.2 }) {
             flexDirection: 'column',
             justifyContent: 'center',
             alignItems: 'flex-start',
-            fontSize: '7px',
-            fontWeight: 'bold',
+            fontSize: '6px',
+            fontWeight: 'normal',
             lineHeight: '1.15',
-            textTransform: 'uppercase'
+            textTransform: 'uppercase',
+            fontFamily: 'monospace',
+            whiteSpace: 'pre-line'
           }}>
-            <div>{item.nombre ? item.nombre.substring(0, 18) : ''}</div>
-            <div style={{ fontSize: '6.5px', fontFamily: 'monospace', marginTop: '1px' }}>{item.sku}</div>
+            {getJewelryLeftLines(item.nombre, item.sku).join('\n')}
           </div>
 
           {/* Right Box (16mm / 26% width): Price ($), Barcode Code128, SKU */}
