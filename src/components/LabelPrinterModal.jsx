@@ -42,8 +42,7 @@ export default function LabelPrinterModal({ isOpen, onClose, initialProducts = [
         precio: p.precioPublico || 0,
         copias: 1,
         seleccionado: true,
-        // Auto-detect format: Aretes & Piercings default to 'vertical', others default to 'horizontal'
-        formato: isEarringCategory(p.categoria, p.nombre) ? 'vertical' : 'horizontal'
+        formato: 'horizontal'
       }));
       setPrintQueue(formatted);
     }
@@ -51,11 +50,9 @@ export default function LabelPrinterModal({ isOpen, onClose, initialProducts = [
 
   if (!isOpen) return null;
 
-  // Helper to detect if item is Arete / Piercing for vertical auto-format
+  // Helper (all products now default to horizontal format)
   function isEarringCategory(cat = '', name = '') {
-    const c = cat.toLowerCase();
-    const n = name.toLowerCase();
-    return c.includes('arete') || c.includes('piercing') || n.includes('arete') || n.includes('stud') || n.includes('earcuff') || n.includes('arracada');
+    return false;
   }
 
   // Handle Excel Upload for Labels with Accent-Insensitive Column Key Resolver
@@ -111,7 +108,7 @@ export default function LabelPrinterModal({ isOpen, onClose, initialProducts = [
                 precio,
                 precioPublico: precio,
                 copias,
-                formato: isEarringCategory(cat, nombre) ? 'vertical' : 'horizontal'
+                formato: 'horizontal'
               });
             }
           });
@@ -170,7 +167,7 @@ export default function LabelPrinterModal({ isOpen, onClose, initialProducts = [
           precio: prod.precioPublico || prod.precio || 0,
           copias: 1,
           seleccionado: true,
-          formato: isEarringCategory(prod.categoria, prod.nombre) ? 'vertical' : 'horizontal'
+          formato: 'horizontal'
         }
       ]);
     }
