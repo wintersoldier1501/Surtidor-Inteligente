@@ -343,41 +343,41 @@ export default function LabelPrinterModal({ isOpen, onClose, initialProducts = [
         // Total Printable Head is 32mm wide (0 to 256 dots).
         // Long adhesive tail from 32mm to 63mm (256 to 504 dots) is left COMPLETELY BLANK!
 
-        // 1. Left Half of Printable Head (0 to 16mm / 0 to 128 dots): Product Name + SKU
+        // 1. Left Half of Printable Head (0 to 16mm): Product Name (max 9 chars/line) + SKU
         const words = nameEscaped.toUpperCase().replace(/-/g, ' ').split(/\s+/).filter(Boolean);
         let lines = [];
         let cur = "";
 
         words.forEach(w => {
-          if ((cur + " " + w).trim().length <= 10) {
+          if ((cur + " " + w).trim().length <= 9) {
             cur = (cur + " " + w).trim();
           } else {
             if (cur) lines.push(cur);
-            cur = w.length > 10 ? w.substring(0, 10) : w;
+            cur = w.length > 9 ? w.substring(0, 9) : w;
           }
         });
         if (cur) lines.push(cur);
 
-        // Keep maximum 3 lines for description so line 4 is strictly reserved for SKU
         const leftLines = lines.slice(0, 3);
-        leftLines.push(skuEscaped.substring(0, 11));
+        const skuLeftFormatted = skuEscaped.length > 10 ? skuEscaped.substring(0, 10) : skuEscaped;
+        leftLines.push(skuLeftFormatted);
 
         leftLines.forEach((l, idx) => {
-          const yPos = 6 + (idx * 18);
-          tspl += `TEXT 16,${yPos},"1",0,1,1,"${l}"\r\n`;
+          const yPos = 4 + (idx * 16);
+          tspl += `TEXT 10,${yPos},"1",0,1,1,"${l}"\r\n`;
         });
 
-        // 2. Right Half of Printable Head: Price ($), Barcode Code128, SKU (Auto-calibrated for long SKUs)
+        // 2. Right Half of Printable Head: Price ($), Barcode Code128, SKU (Dynamic X alignment for long SKUs)
         const priceText = `$ ${item.precio}.00`;
-        const skuFormatted = skuEscaped.substring(0, 12);
+        const isLongSku = skuEscaped.length > 9;
 
-        // Dynamic Barcode position based on SKU length to prevent right border overflow
-        const barcodeX = skuFormatted.length > 9 ? 115 : 122;
-        const barcodeWidth = skuFormatted.length > 9 ? 1 : 1;
+        const barcodeX = isLongSku ? 112 : 122;
+        const skuRightX = isLongSku ? 118 : 135;
+        const priceX = isLongSku ? 128 : 138;
 
-        tspl += `TEXT 140,6,"1",0,1,1,"${priceText}"\r\n`;
-        tspl += `BARCODE ${barcodeX},26,"128",22,0,0,${barcodeWidth},2,"${skuFormatted}"\r\n`;
-        tspl += `TEXT 140,58,"1",0,1,1,"${skuFormatted}"\r\n`;
+        tspl += `TEXT ${priceX},4,"1",0,1,1,"${priceText}"\r\n`;
+        tspl += `BARCODE ${barcodeX},22,"128",24,0,0,1,2,"${skuEscaped.substring(0, 15)}"\r\n`;
+        tspl += `TEXT ${skuRightX},54,"1",0,1,1,"${skuEscaped.substring(0, 13)}"\r\n`;
 
         // 3. Long Adhesive Tail (32mm to 63mm): LEFT COMPLETELY BLANK!
       }
