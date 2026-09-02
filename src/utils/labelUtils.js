@@ -26,7 +26,7 @@ export function getJewelryLeftLines(rawNombre = '', rawSku = '') {
   const words = name.replace(/-/g, ' ').split(/\s+/).filter(Boolean);
   let descLines = [];
   let cur = "";
-  const maxCharsPerLine = 12; // 12 chars max for micro 6pt font -> ZERO overlap with right box
+  const maxCharsPerLine = 10; // STRICT 10 CHARS MAX PER LINE -> Guarantees zero overlap with right box ($/Barcode)
 
   words.forEach(w => {
     if ((cur + " " + w).trim().length <= maxCharsPerLine) {
@@ -84,7 +84,7 @@ export function convertElementsToTSPL(elements, product, copies = 1) {
         const words = content.replace(/-/g, ' ').split(/\s+/).filter(Boolean);
         let lines = [];
         let cur = "";
-        const maxCharsPerLine = 12;
+        const maxCharsPerLine = 10;
 
         words.forEach(w => {
           if ((cur + " " + w).trim().length <= maxCharsPerLine) {
@@ -96,11 +96,12 @@ export function convertElementsToTSPL(elements, product, copies = 1) {
         });
         if (cur) lines.push(cur);
 
-        const ySpacing = 11;
+        const ySpacing = 14;
+        const fontType = "1";
 
         lines.slice(0, 3).forEach((lineText, idx) => {
           let lineX = xDots;
-          const charWidth = 5;
+          const charWidth = 8;
           const textWidth = lineText.length * charWidth;
 
           if (el.align === 'center') {
@@ -110,7 +111,7 @@ export function convertElementsToTSPL(elements, product, copies = 1) {
           }
 
           const lineY = yDots + (idx * ySpacing);
-          tspl += `TEXT ${lineX},${lineY},"0",0,6,0,"${lineText}"\r\n`;
+          tspl += `TEXT ${lineX},${lineY},"${fontType}",0,1,1,"${lineText}"\r\n`;
         });
         return;
       }
@@ -125,7 +126,8 @@ export function convertElementsToTSPL(elements, product, copies = 1) {
         content = (el.customText || '').toUpperCase();
       }
 
-      const charWidth = 5;
+      const fontType = "1";
+      const charWidth = 8;
       const textWidth = content.length * charWidth;
       let textX = xDots;
 
@@ -136,7 +138,7 @@ export function convertElementsToTSPL(elements, product, copies = 1) {
       }
 
       const rot = el.rotation || 0;
-      tspl += `TEXT ${textX},${yDots},"0",${rot},6,0,"${content}"\r\n`;
+      tspl += `TEXT ${textX},${yDots},"${fontType}",${rot},1,1,"${content}"\r\n`;
     }
   });
 

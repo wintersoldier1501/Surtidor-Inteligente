@@ -351,13 +351,13 @@ export default function LabelPrinterModal({ isOpen, onClose, initialProducts = [
         tspl += `BAR 245,4,2,80\r\n`;
         tspl += `TEXT 360,75,"2",90,1,1,"${skuEscaped}  $${item.precio}"\r\n`;
       } else {
-        // 1. Left Half: Cleaned Product Name + SKU Line (FONT "0" 6pt Micro Font, mathematically centered)
+        // 1. Left Half: Cleaned Product Name + SKU Line (Strict 10 chars/line, 14-dot vertical spacing, mathematically centered)
         const leftLines = getJewelryLeftLines(item.nombre, item.sku);
         leftLines.forEach((l, idx) => {
-          const textWidth = l.length * 5;
+          const textWidth = l.length * 8;
           const lineX = Math.max(2, 55 - Math.round(textWidth / 2));
-          const yPos = 3 + (idx * 11);
-          tspl += `TEXT ${lineX},${yPos},"0",0,6,0,"${l}"\r\n`;
+          const yPos = 4 + (idx * 14);
+          tspl += `TEXT ${lineX},${yPos},"1",0,1,1,"${l}"\r\n`;
         });
 
         // 2. Right Half of Printable Head: Price ($), Barcode Code128, SKU
@@ -1025,15 +1025,15 @@ function SingleLabelPreview({ item, scale = 3.2 }) {
           <div style={{
             width: '26%',
             height: '100%',
-            padding: '1px 2px',
+            padding: '2px 3px',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'center',
             alignItems: 'center',
             textAlign: 'center',
-            fontSize: '4.8px',
+            fontSize: '5.8px',
             fontWeight: 'normal',
-            lineHeight: '1.05',
+            lineHeight: '1.15',
             textTransform: 'uppercase',
             fontFamily: 'monospace',
             whiteSpace: 'pre-line'
