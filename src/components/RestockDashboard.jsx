@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { Warehouse, Printer, Copy, Check, Filter, Hammer, PackageCheck, AlertTriangle, Image as ImageIcon, Search, Star } from 'lucide-react';
+import { Warehouse, Printer, Copy, Check, Filter, Hammer, PackageCheck, AlertTriangle, Image as ImageIcon, Search, Star, Tag } from 'lucide-react';
+import LabelPrinterModal from './LabelPrinterModal';
 
 export default function RestockDashboard({ products, onOpenImageModal, onToggleNoSurtirPaseo, onToggleEstrella }) {
   const [paseoThreshold, setPaseoThreshold] = useState(0); // 0 means Paseo stock == 0
@@ -9,6 +10,7 @@ export default function RestockDashboard({ products, onOpenImageModal, onToggleN
   const [activeSubTab, setActiveSubTab] = useState('general'); // 'general', 'taller', 'agotados'
   const [omitExcluidos, setOmitExcluidos] = useState(true);
   const [copiedMsg, setCopiedMsg] = useState(false);
+  const [showLabelModal, setShowLabelModal] = useState(false);
 
   // Compute items that require restocking for Paseo Durango
   const restockAnalysis = useMemo(() => {
@@ -104,7 +106,12 @@ export default function RestockDashboard({ products, onOpenImageModal, onToggleN
         </div>
 
         {/* Action buttons */}
-        <div style={{ display: 'flex', gap: '12px' }}>
+        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+          <button className="btn btn-gold" onClick={() => setShowLabelModal(true)} style={{ background: 'linear-gradient(135deg, #059669 0%, #047857 100%)' }}>
+            <Tag size={18} />
+            <span>🏷️ Generar Etiquetas</span>
+          </button>
+
           <button className="btn btn-outline" onClick={handleCopyWhatsApp}>
             {copiedMsg ? <Check color="#34d399" size={18} /> : <Copy size={18} />}
             <span>{copiedMsg ? '¡Copiado!' : 'Copiar para WhatsApp'}</span>
@@ -452,6 +459,14 @@ export default function RestockDashboard({ products, onOpenImageModal, onToggleN
         )}
 
       </div>
+
+      {/* Label Printer Modal */}
+      <LabelPrinterModal
+        isOpen={showLabelModal}
+        onClose={() => setShowLabelModal(false)}
+        initialProducts={getCurrentList(activeSubTab, restockAnalysis)}
+        allProducts={products}
+      />
 
     </div>
   );

@@ -7,6 +7,7 @@ import WorkshopView from './components/WorkshopView';
 import ExcelImporter from './components/ExcelImporter';
 import ImageModal from './components/ImageModal';
 import PinLockModal from './components/PinLockModal';
+import LabelPrinterModal from './components/LabelPrinterModal';
 import { subscribeToLiveProducts, pushProductsToCloud } from './firebase';
 
 const STORAGE_KEY = 'accesorizate_products_v1';
@@ -374,6 +375,15 @@ export default function App() {
             onUpdateStock={handleUpdateStock}
             onUpdateTallerSkus={handleUpdateTallerSkus}
             onSyncCatalogPhotos={handleSyncCatalogPhotos}
+          />
+        )}
+
+        {activeTab === 'etiquetas' && (
+          <LabelPrinterModal
+            isOpen={true}
+            onClose={() => setActiveTab('surtidor')}
+            initialProducts={[]}
+            allProducts={products}
           />
         )}
       </main>

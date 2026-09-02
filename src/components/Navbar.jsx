@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sparkles, Package, Hammer, Upload, Gem, Layers, Warehouse, Lock } from 'lucide-react';
+import { Sparkles, Package, Hammer, Upload, Gem, Layers, Warehouse, Lock, Tag } from 'lucide-react';
 
 export default function Navbar({ activeTab, setActiveTab, stats, onLock }) {
   return (
@@ -73,6 +73,15 @@ export default function Navbar({ activeTab, setActiveTab, stats, onLock }) {
             <span style={{ background: 'var(--purple-bg)', color: '#c084fc', padding: '2px 6px', borderRadius: '10px', fontSize: '0.7rem', fontWeight: 'bold' }}>
               {stats.tallerCount}
             </span>
+          </button>
+
+          <button
+            className={`btn ${activeTab === 'etiquetas' ? 'btn-gold' : 'btn-outline'}`}
+            onClick={() => setActiveTab('etiquetas')}
+            style={{ border: activeTab === 'etiquetas' ? 'none' : 'transparent', padding: '8px 14px', fontSize: '0.85rem' }}
+          >
+            <Tag size={16} />
+            <span>Etiquetas</span>
           </button>
 
           <button
