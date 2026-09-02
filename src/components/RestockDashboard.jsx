@@ -108,15 +108,6 @@ export default function RestockDashboard({ products, onOpenImageModal, onToggleN
 
         {/* Action buttons */}
         <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-          <button className="btn btn-gold" onClick={() => setShowLabelModal(true)} style={{ background: 'linear-gradient(135deg, #059669 0%, #047857 100%)' }}>
-            <Tag size={18} />
-            <span>
-              {selectedSkusForLabels.length > 0
-                ? `🏷️ Generar Etiquetas (${selectedSkusForLabels.length} seleccionados)`
-                : '🏷️ Generar Etiquetas'}
-            </span>
-          </button>
-
           <button className="btn btn-outline" onClick={handleCopyWhatsApp}>
             {copiedMsg ? <Check color="#34d399" size={18} /> : <Copy size={18} />}
             <span>{copiedMsg ? '¡Copiado!' : 'Copiar para WhatsApp'}</span>
