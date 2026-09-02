@@ -16,6 +16,21 @@ export default function LabelPrinterModal({ isOpen, onClose, initialProducts = [
   const [excelCatalog, setExcelCatalog] = useState([]);
   const [excelSearchQuery, setExcelSearchQuery] = useState('');
 
+  // Load saved Excel catalog from localStorage on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('accesorizate_saved_excel_catalog');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setExcelCatalog(parsed);
+        }
+      }
+    } catch (e) {
+      console.warn('Error reading saved Excel catalog:', e);
+    }
+  }, []);
+
   // Initialize print queue when opened with initialProducts from Surtidor
   useEffect(() => {
     if (isOpen && initialProducts && initialProducts.length > 0) {
@@ -102,7 +117,12 @@ export default function LabelPrinterModal({ isOpen, onClose, initialProducts = [
 
           if (newItems.length > 0) {
             setExcelCatalog(newItems);
-            setExcelMsg({ type: 'success', text: `¡Se cargaron ${newItems.length} productos del Excel con sus precios correctamente!` });
+            try {
+              localStorage.setItem('accesorizate_saved_excel_catalog', JSON.stringify(newItems));
+            } catch (e) {
+              console.warn('Error saving catalog to localStorage:', e);
+            }
+            setExcelMsg({ type: 'success', text: `¡Se guardaron ${newItems.length} productos en memoria permanente! Ya no tendrás que volver a subir el Excel.` });
           } else {
             setExcelMsg({ type: 'error', text: 'No se encontraron columnas de SKU o Clave válidas en el Excel.' });
           }
@@ -113,6 +133,18 @@ export default function LabelPrinterModal({ isOpen, onClose, initialProducts = [
       }
     };
     reader.readAsBinaryString(file);
+  };
+
+  // Clear Saved Excel Catalog
+  const handleClearSavedCatalog = () => {
+    if (window.confirm('¿Deseas borrar el catálogo de Excel guardado en memoria?')) {
+      setExcelCatalog([]);
+      try {
+        localStorage.removeItem('accesorizate_saved_excel_catalog');
+      } catch (e) {
+        console.warn('Error clearing catalog:', e);
+      }
+    }
   };
 
   // Combined Catalog Search (allProducts + excelCatalog)
@@ -770,8 +802,16 @@ export default function LabelPrinterModal({ isOpen, onClose, initialProducts = [
                   <span>{excelCatalog.length > 0 ? '📁 Cambiar Archivo Excel' : '📥 Cargar Archivo Excel'}</span>
                 </label>
                 {excelCatalog.length > 0 && (
-                  <div style={{ fontSize: '0.78rem', color: '#34d399', marginTop: '6px', fontWeight: 'bold' }}>
-                    ✅ {excelCatalog.length} productos cargados desde el Excel
+                  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px', marginTop: '8px' }}>
+                    <span style={{ fontSize: '0.78rem', color: '#34d399', fontWeight: 'bold' }}>
+                      ✅ {excelCatalog.length} productos guardados en memoria
+                    </span>
+                    <button
+                      onClick={handleClearSavedCatalog}
+                      style={{ background: 'transparent', border: 'none', color: '#f87171', fontSize: '0.75rem', cursor: 'pointer', textDecoration: 'underline' }}
+                    >
+                      Borrar Memoria
+                    </button>
                   </div>
                 )}
               </div>
