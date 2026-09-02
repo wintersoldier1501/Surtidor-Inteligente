@@ -309,10 +309,10 @@ export default function LabelPrinterModal({ isOpen, onClose, initialProducts = [
           tspl += `TEXT 16,${yPos},"1",0,1,1,"${l}"\r\n`;
         });
 
-        // 2. Right Half of Printable Head (16mm to 32mm / 128 to 256 dots): Price ($), Barcode Code128, SKU
-        tspl += `TEXT 165,6,"1",0,1,1,"$ ${item.precio}.00"\r\n`;
-        tspl += `BARCODE 145,26,"128",22,0,0,1,2,"${skuEscaped}"\r\n`;
-        tspl += `TEXT 165,58,"1",0,1,1,"${skuEscaped}"\r\n`;
+        // 2. Right Half of Printable Head: Price ($), Barcode Code128, SKU shifted left
+        tspl += `TEXT 140,6,"1",0,1,1,"$ ${item.precio}.00"\r\n`;
+        tspl += `BARCODE 122,26,"128",22,0,0,1,2,"${skuEscaped}"\r\n`;
+        tspl += `TEXT 140,58,"1",0,1,1,"${skuEscaped}"\r\n`;
 
         // 3. Long Adhesive Tail (32mm to 63mm): LEFT COMPLETELY BLANK!
       }
