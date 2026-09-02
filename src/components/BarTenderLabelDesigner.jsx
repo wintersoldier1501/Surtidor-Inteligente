@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Tag, Move, Type, Barcode, Minimize2, RotateCw, Trash2, Plus, Save, RefreshCw, Printer, Download, Layout, Layers, Check } from 'lucide-react';
 import JsBarcode from 'jsbarcode';
 import jsPDF from 'jspdf';
-import { getJewelryLeftLines } from './LabelPrinterModal';
+import { getJewelryLeftLines } from '../utils/labelUtils';
 
 // Default presets calibrated for 63mm x 11mm (32mm Head + 31mm Tail)
 const PRESET_TEMPLATES = {
