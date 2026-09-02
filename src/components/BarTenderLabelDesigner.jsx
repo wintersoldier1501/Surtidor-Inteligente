@@ -148,10 +148,10 @@ export default function BarTenderLabelDesigner({
 
     const leftLines = getJewelryLeftLines(testProduct.nombre, testProduct.sku);
     leftLines.forEach((l, idx) => {
-      const textWidth = l.length * 8;
+      const textWidth = l.length * 5;
       const lineX = Math.max(2, 55 - Math.round(textWidth / 2));
-      const yPos = 4 + (idx * 14);
-      tspl += `TEXT ${lineX},${yPos},"1",0,1,1,"${l}"\r\n`;
+      const yPos = 3 + (idx * 11);
+      tspl += `TEXT ${lineX},${yPos},"0",0,6,0,"${l}"\r\n`;
     });
 
     const priceText = `$ ${testProduct.precioPublico || testProduct.precio || 0}.00`;
