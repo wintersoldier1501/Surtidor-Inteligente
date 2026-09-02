@@ -264,29 +264,9 @@ export default function LabelPrinterModal({ isOpen, onClose, initialProducts = [
     document.body.removeChild(link);
   };
 
-  // Direct Hardware Printing via WebSerial Port (Zero PDF, Zero Dialog)
+  // Direct Hardware Printing via Accesorizate Native Agent (Zero PDF, Zero Dialog, Instant)
   const handlePrintDirectHardware = async () => {
     if (activeQueue.length === 0) return;
-
-    let port = serialPort;
-
-    if (!port && 'serial' in navigator) {
-      try {
-        port = await navigator.serial.requestPort();
-        await port.open({ baudRate: 9600 });
-        setSerialPort(port);
-        setHardwareStatus('conectado');
-      } catch (err) {
-        console.error('Error abriendo puerto:', err);
-        alert('Selecciona el puerto USB / COM de tu impresora Ribetec / TSC.');
-        return;
-      }
-    }
-
-    if (!port || !port.writable) {
-      alert('No se pudo conectar al puerto de la impresora. Por favor verifica la conexión USB.');
-      return;
-    }
 
     let tspl = 'SIZE 63 mm, 11 mm\r\nGAP 3 mm, 0 mm\r\nDIRECTION 1\r\nCLS\r\n';
 
@@ -309,13 +289,38 @@ export default function LabelPrinterModal({ isOpen, onClose, initialProducts = [
     });
 
     try {
-      const encoder = new TextEncoder();
-      const writer = port.writable.getWriter();
-      await writer.write(encoder.encode(tspl));
-      writer.releaseLock();
+      // 1. Try local Accesorizate WinSpool Agent (http://127.0.0.1:9123/print)
+      const res = await fetch('http://127.0.0.1:9123/print', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tspl, printer: 'TSC T-200' })
+      });
+      const data = await res.json();
+      if (data.status === 'ok') {
+        alert('¡Etiquetas enviadas instantáneamente a tu impresora Ribetec / TSC!');
+        return;
+      }
+    } catch (e) {
+      console.warn('Local print agent fallback to WebSerial/WebUSB:', e);
+    }
+
+    // Fallback: WebSerial / WebUSB
+    try {
+      if ('serial' in navigator) {
+        let port = serialPort;
+        if (!port) {
+          port = await navigator.serial.requestPort();
+          await port.open({ baudRate: 9600 });
+          setSerialPort(port);
+        }
+        const encoder = new TextEncoder();
+        const writer = port.writable.getWriter();
+        await writer.write(encoder.encode(tspl));
+        writer.releaseLock();
+        alert('¡Etiquetas enviadas a la impresora!');
+      }
     } catch (err) {
-      console.error('Error enviando datos a la impresora:', err);
-      alert('Error enviando datos a la impresora. Verifica el cable USB.');
+      alert('No se pudo conectar a la impresora. Revisa que el servicio local de impresión esté activo.');
     }
   };
 
