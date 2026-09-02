@@ -41,7 +41,7 @@ export default function BarTenderLabelDesigner({
   const [elements, setElements] = useState(PRESET_TEMPLATES.rattail.elements);
   const [selectedElementId, setSelectedElementId] = useState('el-name');
   const [testProduct, setTestProduct] = useState(sampleProduct);
-  const [scale, setScale] = useState(4.2); // 4.2x zoom for high-res screen editing
+  const [scale, setScale] = useState(8.5); // High-res 8.5x zoom by default so label fills the screen
   const [saveSuccessMsg, setSaveSuccessMsg] = useState(false);
 
   useEffect(() => {
@@ -261,6 +261,15 @@ export default function BarTenderLabelDesigner({
 
         {/* Action Controls */}
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          
+          {/* Zoom Level Controller */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: '#111', padding: '4px 8px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Zoom:</span>
+            <button className="btn btn-outline" onClick={() => setScale(prev => Math.max(3, prev - 1.5))} style={{ padding: '2px 8px', fontSize: '0.8rem', fontWeight: 'bold' }}>-</button>
+            <span style={{ fontSize: '0.82rem', fontWeight: 'bold', color: 'var(--gold-primary)', minWidth: '45px', textAlign: 'center' }}>{Math.round((scale / 3.5) * 100)}%</span>
+            <button className="btn btn-outline" onClick={() => setScale(prev => Math.min(18, prev + 1.5))} style={{ padding: '2px 8px', fontSize: '0.8rem', fontWeight: 'bold' }}>+</button>
+          </div>
+
           <button
             className="btn btn-gold"
             onClick={handleSaveCustomTemplate}
@@ -563,16 +572,61 @@ export default function BarTenderLabelDesigner({
               {/* Text specific styling */}
               {selectedElement.type === 'text' && (
                 <>
-                  <div>
-                    <label style={{ color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Tamaño de Letra (pt):</label>
-                    <input
-                      type="number"
-                      step="0.5"
-                      value={selectedElement.fontSize || 8}
-                      onChange={(e) => updateElement(selectedElement.id, 'fontSize', parseFloat(e.target.value) || 6)}
-                      className="input-field"
-                      style={{ width: '100%', fontSize: '0.8rem' }}
-                    />
+                  <div style={{ background: '#111', padding: '12px', borderRadius: '8px', border: '1px solid var(--gold-primary)' }}>
+                    <label style={{ color: 'var(--gold-primary)', fontWeight: 'bold', display: 'block', marginBottom: '8px', fontSize: '0.82rem' }}>
+                      🔤 Tamaño de Tipografía / Fuente:
+                    </label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <button
+                        className="btn btn-outline"
+                        onClick={() => updateElement(selectedElement.id, 'fontSize', Math.max(4, Number(((selectedElement.fontSize || 6.5) - 0.5).toFixed(1))))}
+                        style={{ padding: '6px 12px', fontSize: '0.95rem', fontWeight: 'bold', flex: '0 0 auto' }}
+                        title="Hacer letra más chica"
+                      >
+                        A-
+                      </button>
+
+                      <input
+                        type="number"
+                        step="0.5"
+                        min="4"
+                        max="24"
+                        value={selectedElement.fontSize || 6.5}
+                        onChange={(e) => updateElement(selectedElement.id, 'fontSize', parseFloat(e.target.value) || 6)}
+                        className="input-field"
+                        style={{ flex: 1, textAlign: 'center', fontWeight: 'bold', fontSize: '1rem', color: 'var(--gold-primary)' }}
+                      />
+
+                      <button
+                        className="btn btn-outline"
+                        onClick={() => updateElement(selectedElement.id, 'fontSize', Number(((selectedElement.fontSize || 6.5) + 0.5).toFixed(1)))}
+                        style={{ padding: '6px 12px', fontSize: '0.95rem', fontWeight: 'bold', flex: '0 0 auto' }}
+                        title="Hacer letra más grande"
+                      >
+                        A+
+                      </button>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '6px', marginTop: '10px' }}>
+                      <button
+                        onClick={() => updateElement(selectedElement.id, 'fontSize', 5.5)}
+                        style={{ flex: 1, padding: '4px', fontSize: '0.72rem', background: selectedElement.fontSize === 5.5 ? 'var(--gold-primary)' : '#222', color: selectedElement.fontSize === 5.5 ? '#000' : '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+                      >
+                        Chica (5.5)
+                      </button>
+                      <button
+                        onClick={() => updateElement(selectedElement.id, 'fontSize', 6.5)}
+                        style={{ flex: 1, padding: '4px', fontSize: '0.72rem', background: selectedElement.fontSize === 6.5 ? 'var(--gold-primary)' : '#222', color: selectedElement.fontSize === 6.5 ? '#000' : '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+                      >
+                        Normal (6.5)
+                      </button>
+                      <button
+                        onClick={() => updateElement(selectedElement.id, 'fontSize', 8.5)}
+                        style={{ flex: 1, padding: '4px', fontSize: '0.72rem', background: selectedElement.fontSize === 8.5 ? 'var(--gold-primary)' : '#222', color: selectedElement.fontSize === 8.5 ? '#000' : '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+                      >
+                        Grande (8.5)
+                      </button>
+                    </div>
                   </div>
 
                   <div>

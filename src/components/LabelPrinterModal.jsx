@@ -900,8 +900,8 @@ export default function LabelPrinterModal({ isOpen, onClose, initialProducts = [
                     <span>{item.formato === 'vertical' ? '👂 Vertical Aretes' : '🏷️ Estándar'}</span>
                   </div>
 
-                  {/* Exact 63mm x 11mm Label Simulation Frame (Scaled 3.2x for screen clarity) */}
-                  <SingleLabelPreview item={item} scale={3.2} />
+                  {/* Exact 63mm x 11mm Label Simulation Frame (Scaled 6.5x for screen clarity) */}
+                  <SingleLabelPreview item={item} scale={6.5} />
                 </div>
               ))}
             </div>
