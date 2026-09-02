@@ -1,19 +1,22 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Tag, Move, Type, Barcode, Minimize2, RotateCw, Trash2, Plus, Save, RefreshCw, Printer, Download, Layout, Layers } from 'lucide-react';
+import { Tag, Move, Type, Barcode, Minimize2, RotateCw, Trash2, Plus, Save, RefreshCw, Printer, Download, Layout, Layers, Check } from 'lucide-react';
 import JsBarcode from 'jsbarcode';
 import jsPDF from 'jspdf';
 
-// Default presets calibrated for 63mm x 11mm
+// Default presets calibrated for 63mm x 11mm (32mm Head + 31mm Tail)
 const PRESET_TEMPLATES = {
-  horizontal: {
-    id: 'horizontal',
-    name: '🏷️ Estándar Horizontal (63x11mm)',
+  rattail: {
+    id: 'rattail',
+    name: '🏷️ Etiqueta Joyería (32mm + Patilla Blanco)',
     elements: [
-      { id: 'el-name', type: 'text', field: 'nombre', label: 'Nombre Producto', x: 2, y: 2, w: 22, h: 7, fontSize: 7, bold: true, align: 'center', rotation: 0, autoFit: true },
-      { id: 'el-line', type: 'line', x: 25, y: 0, w: 0.3, h: 11 },
-      { id: 'el-price', type: 'text', field: 'precio', label: 'Precio ($)', x: 42, y: 1, w: 19, h: 3.5, fontSize: 8.5, bold: true, align: 'right', prefix: '$ ' },
-      { id: 'el-barcode', type: 'barcode', field: 'sku', label: 'Código Barras Code128', x: 28, y: 4, w: 32, h: 4 },
-      { id: 'el-sku', type: 'text', field: 'sku', label: 'SKU / Clave', x: 28, y: 8.5, w: 32, h: 2.5, fontSize: 7, bold: true, align: 'center', rotation: 0 }
+      { id: 'el-name', type: 'text', field: 'nombre', label: 'Nombre Producto (Izquierda)', x: 1.5, y: 0.5, w: 14.5, h: 7, fontSize: 6.5, bold: true, align: 'left', rotation: 0, autoFit: true },
+      { id: 'el-sku-left', type: 'text', field: 'sku', label: 'SKU (Izquierda)', x: 1.5, y: 7.8, w: 14.5, h: 2.8, fontSize: 6, bold: true, align: 'left' },
+      
+      { id: 'el-price', type: 'text', field: 'precio', label: 'Precio ($ Derecho)', x: 17.5, y: 0.5, w: 14, h: 3, fontSize: 7, bold: true, align: 'center', prefix: '$ ' },
+      { id: 'el-barcode', type: 'barcode', field: 'sku', label: 'Código Barras (Derecho)', x: 16.5, y: 3.5, w: 15, h: 3.5 },
+      { id: 'el-sku-right', type: 'text', field: 'sku', label: 'SKU (Derecho)', x: 17.5, y: 7.5, w: 14, h: 2.8, fontSize: 6, bold: true, align: 'center' },
+
+      { id: 'el-tail-blank', type: 'tail', label: 'Patilla Adhesiva (31mm Blanco)', x: 32, y: 0, w: 31, h: 11 }
     ]
   },
   verticalAretes: {
@@ -34,13 +37,12 @@ export default function BarTenderLabelDesigner({
   allProducts = [],
   onPrintBatch
 }) {
-  const [selectedTemplateKey, setSelectedTemplateKey] = useState('horizontal');
-  const [elements, setElements] = useState(PRESET_TEMPLATES.horizontal.elements);
+  const [selectedTemplateKey, setSelectedTemplateKey] = useState('rattail');
+  const [elements, setElements] = useState(PRESET_TEMPLATES.rattail.elements);
   const [selectedElementId, setSelectedElementId] = useState('el-name');
   const [testProduct, setTestProduct] = useState(sampleProduct);
   const [scale, setScale] = useState(4.2); // 4.2x zoom for high-res screen editing
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [saveSuccessMsg, setSaveSuccessMsg] = useState(false);
 
   useEffect(() => {
     if (sampleProduct) {
@@ -48,9 +50,35 @@ export default function BarTenderLabelDesigner({
     }
   }, [sampleProduct]);
 
+  // Load saved custom template from localStorage on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('accesorizate_bartender_custom_template');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setElements(parsed);
+        }
+      }
+    } catch (e) {
+      console.warn('Error loading custom bartender template:', e);
+    }
+  }, []);
+
   if (!isOpen) return null;
 
   const selectedElement = elements.find(el => el.id === selectedElementId);
+
+  // Save Custom Template to localStorage
+  const handleSaveCustomTemplate = () => {
+    try {
+      localStorage.setItem('accesorizate_bartender_custom_template', JSON.stringify(elements));
+      setSaveSuccessMsg(true);
+      setTimeout(() => setSaveSuccessMsg(false), 3000);
+    } catch (e) {
+      console.warn('Error saving template:', e);
+    }
+  };
 
   // Switch Preset Template
   const handleSelectPreset = (key) => {
@@ -112,6 +140,64 @@ export default function BarTenderLabelDesigner({
     }
   };
 
+  // Direct Hardware Printing from Designer Canvas
+  const handlePrintDirectFromDesigner = async () => {
+    const skuEscaped = (testProduct.sku || '').replace(/"/g, '').toUpperCase();
+    const nameEscaped = (testProduct.nombre || '').replace(/"/g, '').toUpperCase().replace(/-/g, ' ');
+
+    let tspl = 'SIZE 63 mm, 11 mm\r\nGAP 3 mm, 0 mm\r\nDIRECTION 1\r\nCLS\r\n';
+
+    const words = nameEscaped.split(/\s+/).filter(Boolean);
+    let lines = [];
+    let cur = "";
+
+    words.forEach(w => {
+      if ((cur + " " + w).trim().length <= 11) {
+        cur = (cur + " " + w).trim();
+      } else {
+        if (cur) lines.push(cur);
+        cur = w.length > 11 ? w.substring(0, 11) : w;
+      }
+    });
+    if (cur) lines.push(cur);
+
+    const leftLines = lines.slice(0, 3);
+    const skuLeftFormatted = skuEscaped.length > 10 ? skuEscaped.substring(0, 10) : skuEscaped;
+    leftLines.push(skuLeftFormatted);
+
+    leftLines.forEach((l, idx) => {
+      const yPos = 4 + (idx * 15);
+      tspl += `TEXT 10,${yPos},"1",0,1,1,"${l}"\r\n`;
+    });
+
+    const priceText = `$ ${testProduct.precioPublico || testProduct.precio || 0}.00`;
+    const isLongSku = skuEscaped.length > 9;
+
+    const barcodeX = isLongSku ? 112 : 122;
+    const skuRightX = isLongSku ? 118 : 135;
+    const priceX = isLongSku ? 128 : 138;
+
+    tspl += `TEXT ${priceX},4,"1",0,1,1,"${priceText}"\r\n`;
+    tspl += `BARCODE ${barcodeX},22,"128",24,0,0,1,2,"${skuEscaped.substring(0, 15)}"\r\n`;
+    tspl += `TEXT ${skuRightX},54,"1",0,1,1,"${skuEscaped.substring(0, 13)}"\r\n`;
+
+    tspl += `PRINT 1,1\r\n`;
+
+    try {
+      const res = await fetch('http://127.0.0.1:9123/print', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tspl, printer: 'TSC T-200' })
+      });
+      const data = await res.json();
+      if (data.status === 'ok') {
+        alert('¡Etiqueta de prueba enviada a la impresora!');
+      }
+    } catch (e) {
+      alert('Servidor local de impresión no respondió. Revisa la conexión.');
+    }
+  };
+
   // Get Display Value for Field
   const getFieldValue = (el, prod) => {
     const p = prod || testProduct;
@@ -121,61 +207,6 @@ export default function BarTenderLabelDesigner({
     if (el.field === 'sku_precio') return `${p.sku || 'SKU'}  $${p.precioPublico || p.precio || 0}`;
     if (el.field === 'categoria') return p.categoria || 'Joyas';
     return el.customText || 'TEXTO';
-  };
-
-  // Generate Vector PDF using current BarTender elements setup
-  const handleExportPDF = () => {
-    try {
-      const doc = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: [63, 11]
-      });
-
-      // Render elements onto PDF
-      elements.forEach(el => {
-        const val = getFieldValue(el, testProduct);
-
-        if (el.type === 'line') {
-          doc.setLineWidth(el.w || 0.3);
-          doc.line(el.x, el.y, el.x + (el.w > el.h ? el.w : 0), el.y + (el.h > el.w ? el.h : 0));
-        } else if (el.type === 'text') {
-          doc.setFontSize(el.fontSize || 8);
-          doc.setFont('helvetica', el.bold ? 'bold' : 'normal');
-
-          if (el.rotation === 90) {
-            doc.text(val, el.x, el.y, { angle: 90 });
-          } else {
-            if (el.autoFit) {
-              const split = doc.splitTextToSize(val.toUpperCase(), el.w || 24);
-              doc.text(split, el.x + (el.align === 'center' ? el.w / 2 : 0), el.y + 2, { align: el.align || 'left' });
-            } else {
-              doc.text(val, el.x + (el.align === 'right' ? el.w : el.align === 'center' ? el.w / 2 : 0), el.y + 3, { align: el.align || 'left' });
-            }
-          }
-        } else if (el.type === 'barcode') {
-          try {
-            const canvas = document.createElement('canvas');
-            JsBarcode(canvas, testProduct.sku || 'SKU123', {
-              format: "CODE128",
-              width: 2,
-              height: 35,
-              displayValue: false,
-              margin: 0
-            });
-            const dataUrl = canvas.toDataURL('image/png');
-            doc.addImage(dataUrl, 'PNG', el.x, el.y, el.w, el.h);
-          } catch (e) {
-            console.warn('Barcode PDF render error:', e);
-          }
-        }
-      });
-
-      const blobUrl = doc.output('bloburl');
-      window.open(blobUrl, '_blank');
-    } catch (err) {
-      console.error('BarTender PDF Export error:', err);
-    }
   };
 
   // Convert mm to Canvas Screen Pixels
@@ -230,9 +261,18 @@ export default function BarTenderLabelDesigner({
 
         {/* Action Controls */}
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-          <button className="btn btn-gold" onClick={handleExportPDF}>
+          <button
+            className="btn btn-gold"
+            onClick={handleSaveCustomTemplate}
+            style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }}
+          >
+            <Save size={16} />
+            <span>{saveSuccessMsg ? '✅ ¡Plantilla Guardada!' : '💾 Guardar Plantilla en Memoria'}</span>
+          </button>
+
+          <button className="btn btn-gold" onClick={handlePrintDirectFromDesigner}>
             <Printer size={16} />
-            <span>📄 Generar PDF (63x11mm)</span>
+            <span>🖨️ Imprimir Prueba en Ribetec</span>
           </button>
 
           <button
@@ -261,7 +301,7 @@ export default function BarTenderLabelDesigner({
               onChange={(e) => handleSelectPreset(e.target.value)}
               style={{ width: '100%', fontSize: '0.82rem' }}
             >
-              <option value="horizontal">🏷️ Estándar Horizontal (63x11mm)</option>
+              <option value="rattail">🏷️ Joyería Mariposa (32mm + Patilla Blanco)</option>
               <option value="verticalAretes">👂 Aretes (Doble Vertical 90°)</option>
             </select>
           </div>
@@ -307,19 +347,22 @@ export default function BarTenderLabelDesigner({
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     {el.type === 'text' && <Type size={14} color="var(--gold-primary)" />}
                     {el.type === 'barcode' && <Barcode size={14} color="#34d399" />}
+                    {el.type === 'tail' && <div style={{ width: '12px', height: '12px', background: 'rgba(255,255,255,0.2)', border: '1px dashed #aaa' }} />}
                     {el.type === 'line' && <div style={{ width: '12px', height: '2px', background: '#fff' }} />}
                     <span style={{ fontWeight: selectedElementId === el.id ? 'bold' : 'normal', color: selectedElementId === el.id ? '#fff' : 'var(--text-muted)' }}>
                       {el.label || el.field || el.id}
                     </span>
                   </div>
 
-                  <button
-                    onClick={(e) => { e.stopPropagation(); handleDeleteElement(el.id); }}
-                    style={{ background: 'transparent', border: 'none', color: '#f87171', cursor: 'pointer', padding: '2px' }}
-                    title="Eliminar capa"
-                  >
-                    <Trash2 size={14} />
-                  </button>
+                  {el.type !== 'tail' && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleDeleteElement(el.id); }}
+                      style={{ background: 'transparent', border: 'none', color: '#f87171', cursor: 'pointer', padding: '2px' }}
+                      title="Eliminar capa"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
@@ -331,7 +374,7 @@ export default function BarTenderLabelDesigner({
         <div style={{ flex: 1, background: '#000000', padding: '32px', overflow: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
           
           <div style={{ marginBottom: '14px', fontSize: '0.82rem', color: 'var(--text-muted)', textAlign: 'center' }}>
-            LIENZO INTERACTIVO WYSIWYG (MEDIDA FÍSICA REAL 63.00 mm X 11.00 mm)
+            LIENZO INTERACTIVO WYSIWYG (32mm RECUADRO IMPRIMIBLE + 31mm PATILLA ADHESIVA BLANCO)
           </div>
 
           {/* Interactive Bounding Frame (63mm x 11mm scaled) */}
@@ -352,6 +395,31 @@ export default function BarTenderLabelDesigner({
             {elements.map(el => {
               const isSelected = selectedElementId === el.id;
               const val = getFieldValue(el, testProduct);
+
+              if (el.type === 'tail') {
+                return (
+                  <div
+                    key={el.id}
+                    style={{
+                      position: 'absolute',
+                      left: `${mmToPx(el.x)}px`,
+                      top: `${mmToPx(el.y)}px`,
+                      width: `${mmToPx(el.w)}px`,
+                      height: `${mmToPx(el.h)}px`,
+                      background: 'rgba(0, 0, 0, 0.05)',
+                      borderLeft: '1.5px dashed #999',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#888',
+                      fontSize: '10px',
+                      fontStyle: 'italic'
+                    }}
+                  >
+                    (Patilla Adhesiva en Blanco)
+                  </div>
+                );
+              }
 
               return (
                 <div
@@ -400,7 +468,7 @@ export default function BarTenderLabelDesigner({
           </div>
 
           <div style={{ marginTop: '16px', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-            Selecciona cualquier elemento en el lienzo o en la columna izquierda para editar su posición y tamaño en milímetros (mm).
+            Modifica cualquier parámetro en el panel derecho y presiona 💾 <strong>Guardar Plantilla en Memoria</strong>.
           </div>
 
         </div>
@@ -414,6 +482,8 @@ export default function BarTenderLabelDesigner({
 
           {!selectedElement ? (
             <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Selecciona un elemento en el lienzo para ver sus propiedades.</p>
+          ) : selectedElement.type === 'tail' ? (
+            <p style={{ fontSize: '0.8rem', color: '#34d399' }}>Patilla adhesiva protegida en blanco (31mm de cola para doblar en la mercancía).</p>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', fontSize: '0.8rem' }}>
               
