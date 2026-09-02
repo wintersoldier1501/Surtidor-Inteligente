@@ -13,6 +13,8 @@ export default function LabelPrinterModal({ isOpen, onClose, initialProducts = [
   const [showDesigner, setShowDesigner] = useState(false);
   const [serialPort, setSerialPort] = useState(null);
   const [hardwareStatus, setHardwareStatus] = useState('desconectado'); // 'desconectado', 'conectado', 'error'
+  const [excelCatalog, setExcelCatalog] = useState([]);
+  const [excelSearchQuery, setExcelSearchQuery] = useState('');
 
   // Initialize print queue when opened with initialProducts from Surtidor
   useEffect(() => {
@@ -78,10 +80,8 @@ export default function LabelPrinterModal({ isOpen, onClose, initialProducts = [
           });
 
           if (newItems.length > 0) {
-            setPrintQueue(prev => [...prev, ...newItems]);
-            setExcelMsg({ type: 'success', text: `¡Se cargaron ${newItems.length} productos desde el Excel correctamente!` });
-            setTimeout(() => setExcelMsg(null), 4000);
-            setActiveTab('queue');
+            setExcelCatalog(newItems);
+            setExcelMsg({ type: 'success', text: `¡Se cargaron ${newItems.length} productos del Excel! Usa el buscador para seleccionar sólo las piezas que deseas imprimir.` });
           } else {
             setExcelMsg({ type: 'error', text: 'No se encontraron columnas de SKU o Clave válidas en el Excel.' });
           }
@@ -93,6 +93,9 @@ export default function LabelPrinterModal({ isOpen, onClose, initialProducts = [
     };
     reader.readAsBinaryString(file);
   };
+
+  // Combined Catalog Search (allProducts + excelCatalog)
+  const combinedCatalog = [...excelCatalog, ...allProducts];
 
   // Add product from Catalog search
   const handleAddProductFromCatalog = (prod) => {
@@ -110,8 +113,9 @@ export default function LabelPrinterModal({ isOpen, onClose, initialProducts = [
           sku: prod.sku,
           nombre: prod.nombre,
           categoria: prod.categoria || 'Otros',
-          precio: prod.precioPublico || 0,
+          precio: prod.precioPublico || prod.precio || 0,
           copias: 1,
+          seleccionado: true,
           formato: isEarringCategory(prod.categoria, prod.nombre) ? 'vertical' : 'horizontal'
         }
       ]);
@@ -119,11 +123,11 @@ export default function LabelPrinterModal({ isOpen, onClose, initialProducts = [
   };
 
   // Filter Catalog Products for Search
-  const filteredCatalog = allProducts.filter(p => {
+  const filteredCatalog = combinedCatalog.filter(p => {
     if (!searchQuery.trim()) return false;
     const q = searchQuery.toLowerCase();
-    return p.sku.toLowerCase().includes(q) || p.nombre.toLowerCase().includes(q);
-  }).slice(0, 15);
+    return (p.sku && p.sku.toLowerCase().includes(q)) || (p.nombre && p.nombre.toLowerCase().includes(q));
+  }).slice(0, 25);
 
   // Update Item Quantity or Format
   const updateQueueItem = (index, key, val) => {
@@ -722,22 +726,17 @@ export default function LabelPrinterModal({ isOpen, onClose, initialProducts = [
             </div>
           )}
 
-          {/* Tab 3: Excel Upload */}
+          {/* Tab 3: Excel Upload & Selective Picker */}
           {activeTab === 'excel' && (
-            <div style={{ padding: '24px 16px', flex: 1 }}>
+            <div style={{ padding: '16px', flex: 1, display: 'flex', flexDirection: 'column' }}>
               <div style={{
-                border: '2px dashed var(--border-color)',
-                borderRadius: '12px',
-                padding: '32px 16px',
+                border: '1.5px dashed var(--border-color)',
+                borderRadius: '10px',
+                padding: '16px',
                 textAlign: 'center',
                 background: '#0a0a0a',
-                cursor: 'pointer'
+                marginBottom: '14px'
               }}>
-                <Upload size={36} color="var(--gold-primary)" style={{ marginBottom: '12px' }} />
-                <h4 style={{ color: '#fff', fontSize: '0.98rem', marginBottom: '6px' }}>Subir Excel de Etiquetas</h4>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginBottom: '16px' }}>
-                  Sube un archivo con columnas <strong>SKU, Nombre, Precio y Cantidad</strong>.
-                </p>
                 <input
                   type="file"
                   accept=".xlsx, .xls"
@@ -745,23 +744,73 @@ export default function LabelPrinterModal({ isOpen, onClose, initialProducts = [
                   style={{ display: 'none' }}
                   id="excelLabelUploadInput"
                 />
-                <label htmlFor="excelLabelUploadInput" className="btn btn-gold" style={{ cursor: 'pointer' }}>
-                  Seleccionar Archivo Excel
+                <label htmlFor="excelLabelUploadInput" className="btn btn-gold" style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                  <Upload size={16} />
+                  <span>{excelCatalog.length > 0 ? '📁 Cambiar Archivo Excel' : '📥 Cargar Archivo Excel'}</span>
                 </label>
+                {excelCatalog.length > 0 && (
+                  <div style={{ fontSize: '0.78rem', color: '#34d399', marginTop: '6px', fontWeight: 'bold' }}>
+                    ✅ {excelCatalog.length} productos cargados desde el Excel
+                  </div>
+                )}
               </div>
 
-              {excelMsg && (
-                <div style={{
-                  marginTop: '16px',
-                  padding: '10px 14px',
-                  borderRadius: '8px',
-                  background: excelMsg.type === 'error' ? 'var(--danger-bg)' : 'var(--success-bg)',
-                  color: excelMsg.type === 'error' ? '#f87171' : '#34d399',
-                  fontSize: '0.85rem',
-                  border: '1px solid rgba(52, 211, 153, 0.3)'
-                }}>
-                  {excelMsg.text}
-                </div>
+              {excelCatalog.length > 0 && (
+                <>
+                  <div style={{ marginBottom: '12px' }}>
+                    <input
+                      type="text"
+                      placeholder="🔍 Buscar por SKU o Nombre en el Excel..."
+                      value={excelSearchQuery}
+                      onChange={(e) => setExcelSearchQuery(e.target.value)}
+                      className="input-field"
+                      style={{ fontSize: '0.82rem' }}
+                    />
+                  </div>
+
+                  <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {excelCatalog
+                      .filter(p => {
+                        if (!excelSearchQuery.trim()) return true;
+                        const q = excelSearchQuery.toLowerCase();
+                        return (p.sku && p.sku.toLowerCase().includes(q)) || (p.nombre && p.nombre.toLowerCase().includes(q));
+                      })
+                      .slice(0, 50)
+                      .map((prod) => (
+                        <div
+                          key={prod.sku}
+                          style={{
+                            padding: '8px 12px',
+                            background: '#0e0e0e',
+                            border: '1px solid var(--border-color)',
+                            borderRadius: '8px',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center'
+                          }}
+                        >
+                          <div style={{ flex: 1, overflow: 'hidden', paddingRight: '8px' }}>
+                            <span style={{ color: 'var(--gold-primary)', fontWeight: 'bold', fontFamily: 'monospace', fontSize: '0.85rem' }}>{prod.sku}</span>
+                            <div style={{ color: 'var(--text-muted)', fontSize: '0.76rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {prod.nombre}
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span style={{ color: '#fff', fontSize: '0.82rem', fontWeight: 'bold' }}>${prod.precio}</span>
+                            <button
+                              className="btn btn-gold"
+                              onClick={() => handleAddProductFromCatalog(prod)}
+                              style={{ padding: '4px 8px', fontSize: '0.75rem' }}
+                              title="Agregar a la lista de impresión"
+                            >
+                              <Plus size={14} />
+                              <span>Agregar</span>
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                </>
               )}
             </div>
           )}
