@@ -23,20 +23,9 @@ export function getJewelryLeftLines(rawNombre = '', rawSku = '') {
     name = nameWords.join(' ');
   }
 
+  // Split each word onto its own line for ultra-clean centered presentation
   const words = name.replace(/-/g, ' ').split(/\s+/).filter(Boolean);
-  let descLines = [];
-  let cur = "";
-  const maxCharsPerLine = 12; // 12 CHARS MAX PER LINE -> Fits full words like CRISTALNEGRO without cutoff, 100% centered
-
-  words.forEach(w => {
-    if ((cur + " " + w).trim().length <= maxCharsPerLine) {
-      cur = (cur + " " + w).trim();
-    } else {
-      if (cur) descLines.push(cur);
-      cur = w.length > maxCharsPerLine ? w.substring(0, maxCharsPerLine) : w;
-    }
-  });
-  if (cur) descLines.push(cur);
+  let descLines = words.map(w => w.length > 12 ? w.substring(0, 12) : w);
 
   const resultLines = descLines.slice(0, 3);
   const skuLeft = sku.length > 12 ? sku.substring(0, 12) : sku;
@@ -78,28 +67,10 @@ export function convertElementsToTSPL(elements, product, copies = 1) {
 
       if (el.field === 'nombre') {
         const leftLines = getJewelryLeftLines(product.nombre, product.sku);
-        content = leftLines.slice(0, 3).join(' ');
-        if (!content) content = (product.nombre || '').toUpperCase().substring(0, 20);
-
-        const words = content.replace(/-/g, ' ').split(/\s+/).filter(Boolean);
-        let lines = [];
-        let cur = "";
-        const maxCharsPerLine = 12;
-
-        words.forEach(w => {
-          if ((cur + " " + w).trim().length <= maxCharsPerLine) {
-            cur = (cur + " " + w).trim();
-          } else {
-            if (cur) lines.push(cur);
-            cur = w.length > maxCharsPerLine ? w.substring(0, maxCharsPerLine) : w;
-          }
-        });
-        if (cur) lines.push(cur);
-
         const ySpacing = 14;
         const fontType = "1";
 
-        lines.slice(0, 3).forEach((lineText, idx) => {
+        leftLines.slice(0, 3).forEach((lineText, idx) => {
           let lineX = xDots;
           const charWidth = 8;
           const textWidth = lineText.length * charWidth;
