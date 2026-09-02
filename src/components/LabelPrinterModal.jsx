@@ -282,31 +282,36 @@ export default function LabelPrinterModal({ isOpen, onClose, initialProducts = [
         tspl += `BAR 245,4,2,80\r\n`;
         tspl += `TEXT 360,75,"2",90,1,1,"${skuEscaped}  $${item.precio}"\r\n`;
       } else {
-        // Horizontal standard format:
-        const titleUpper = nameEscaped.toUpperCase();
-        let line1 = titleUpper;
-        let line2 = "";
-        if (titleUpper.length > 13) {
-          const lastSpace = titleUpper.lastIndexOf(' ', 13);
-          const splitIdx = lastSpace > 0 ? lastSpace : 13;
-          line1 = titleUpper.substring(0, splitIdx);
-          line2 = titleUpper.substring(splitIdx).trim();
-        }
+        // Horizontal standard Jewelry Foldable Tag (Identical to LabelShop):
+        // Left Face (Product Name + SKU in small FONT "1" stacked vertically):
+        const words = nameEscaped.toUpperCase().replace(/-/g, ' ').split(/\s+/).filter(Boolean);
+        let lines = [];
+        let cur = "";
 
-        if (line2) {
-          tspl += `TEXT 10,12,"2",0,1,1,"${line1.substring(0, 13)}"\r\n`;
-          tspl += `TEXT 10,44,"2",0,1,1,"${line2.substring(0, 13)}"\r\n`;
-        } else {
-          tspl += `TEXT 10,28,"2",0,1,1,"${line1.substring(0, 13)}"\r\n`;
-        }
+        words.forEach(w => {
+          if ((cur + " " + w).trim().length <= 11) {
+            cur = (cur + " " + w).trim();
+          } else {
+            if (cur) lines.push(cur);
+            cur = w.substring(0, 11);
+          }
+        });
+        if (cur) lines.push(cur);
 
-        // Vertical divider line:
-        tspl += `BAR 190,4,2,80\r\n`;
+        const leftLines = lines.slice(0, 3);
+        leftLines.push(skuEscaped);
 
-        // Right Box: Price ($), Barcode Code128, SKU
-        tspl += `TEXT 340,6,"3",0,1,1,"$ ${item.precio}.00"\r\n`;
-        tspl += `BARCODE 215,34,"128",26,0,0,2,2,"${skuEscaped}"\r\n`;
-        tspl += `TEXT 300,66,"2",0,1,1,"${skuEscaped}"\r\n`;
+        leftLines.forEach((l, idx) => {
+          const yPos = 6 + (idx * 18);
+          tspl += `TEXT 16,${yPos},"1",0,1,1,"${l}"\r\n`;
+        });
+
+        // Middle Neck (Patilla adhesiva): DEJAR EN BLANCO
+
+        // Right Face: Price ($), Barcode Code128, SKU
+        tspl += `TEXT 360,6,"2",0,1,1,"$ ${item.precio}.00"\r\n`;
+        tspl += `BARCODE 300,28,"128",20,0,0,1,2,"${skuEscaped}"\r\n`;
+        tspl += `TEXT 330,56,"1",0,1,1,"${skuEscaped}"\r\n`;
       }
       tspl += `PRINT ${copies},1\r\n`;
     });
