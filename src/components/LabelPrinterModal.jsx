@@ -351,11 +351,13 @@ export default function LabelPrinterModal({ isOpen, onClose, initialProducts = [
         tspl += `BAR 245,4,2,80\r\n`;
         tspl += `TEXT 360,75,"2",90,1,1,"${skuEscaped}  $${item.precio}"\r\n`;
       } else {
-        // 1. Left Half: Cleaned Product Name + SKU Line
+        // 1. Left Half: Cleaned Product Name + SKU Line (Centered mathematically in left 0-14mm box)
         const leftLines = getJewelryLeftLines(item.nombre, item.sku);
         leftLines.forEach((l, idx) => {
-          const yPos = 4 + (idx * 15);
-          tspl += `TEXT 10,${yPos},"1",0,1,1,"${l}"\r\n`;
+          const textWidth = l.length * 8;
+          const lineX = Math.max(2, 55 - Math.round(textWidth / 2));
+          const yPos = 6 + (idx * 14);
+          tspl += `TEXT ${lineX},${yPos},"1",0,1,1,"${l}"\r\n`;
         });
 
         // 2. Right Half of Printable Head: Price ($), Barcode Code128, SKU
@@ -1027,7 +1029,8 @@ function SingleLabelPreview({ item, scale = 3.2 }) {
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'center',
-            alignItems: 'flex-start',
+            alignItems: 'center',
+            textAlign: 'center',
             fontSize: '6px',
             fontWeight: 'normal',
             lineHeight: '1.15',
