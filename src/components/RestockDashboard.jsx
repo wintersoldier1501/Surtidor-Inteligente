@@ -317,7 +317,7 @@ export default function RestockDashboard({ products, onOpenImageModal, onToggleN
               </thead>
               <tbody>
                 {getCurrentList(activeSubTab, restockAnalysis).map((item) => (
-                  <tr key={item.sku} style={{ borderBottom: '1px solid #1e2330', transition: 'background 0.15s' }}>
+                  <tr key={item.sku} style={{ borderBottom: '1px solid var(--border-color)', transition: 'background 0.15s' }}>
                     
                     {/* Thumbnail / Image */}
                     <td style={{ padding: '12px 16px' }}>
@@ -327,7 +327,7 @@ export default function RestockDashboard({ products, onOpenImageModal, onToggleN
                           width: '44px',
                           height: '44px',
                           borderRadius: '8px',
-                          background: '#11131a',
+                          background: '#000000',
                           border: '1px solid var(--border-color)',
                           overflow: 'hidden',
                           display: 'flex',

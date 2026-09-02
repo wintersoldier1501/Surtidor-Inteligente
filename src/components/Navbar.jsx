@@ -3,7 +3,7 @@ import { Sparkles, Package, Hammer, Upload, Gem, Layers, Warehouse, Lock } from 
 
 export default function Navbar({ activeTab, setActiveTab, stats, onLock }) {
   return (
-    <header className="no-print" style={{ background: '#11131a', borderBottom: '1px solid var(--border-color)', position: 'sticky', top: 0, zIndex: 100 }}>
+    <header className="no-print" style={{ background: '#000000', borderBottom: '1px solid var(--border-color)', position: 'sticky', top: 0, zIndex: 100 }}>
       <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '14px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '20px' }}>
         
         {/* Brand Logo */}
@@ -15,7 +15,7 @@ export default function Navbar({ activeTab, setActiveTab, stats, onLock }) {
               borderRadius: '12px',
               background: '#ffffff',
               border: '2px solid var(--gold-primary)',
-              boxShadow: '0 0 14px rgba(212, 175, 55, 0.4)',
+              boxShadow: '0 0 14px rgba(52, 211, 153, 0.4)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -36,7 +36,7 @@ export default function Navbar({ activeTab, setActiveTab, stats, onLock }) {
         </div>
 
         {/* Navigation Tabs */}
-        <nav style={{ display: 'flex', gap: '6px', background: '#181b24', padding: '5px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', flexShrink: 0 }}>
+        <nav style={{ display: 'flex', gap: '6px', background: '#0d0d0d', padding: '5px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', flexShrink: 0 }}>
           <button
             className={`btn ${activeTab === 'surtidor' ? 'btn-gold' : 'btn-outline'}`}
             onClick={() => setActiveTab('surtidor')}
@@ -45,7 +45,7 @@ export default function Navbar({ activeTab, setActiveTab, stats, onLock }) {
             <Warehouse size={16} />
             <span>Surtidor entre Almacenes</span>
             {stats.surtirCount > 0 && (
-              <span style={{ background: activeTab === 'surtidor' ? '#0f1117' : 'var(--warning)', color: activeTab === 'surtidor' ? '#fff' : '#0f1117', padding: '2px 6px', borderRadius: '10px', fontSize: '0.7rem', fontWeight: 'bold' }}>
+              <span style={{ background: activeTab === 'surtidor' ? '#000000' : 'var(--warning)', color: activeTab === 'surtidor' ? '#fff' : '#000000', padding: '2px 6px', borderRadius: '10px', fontSize: '0.7rem', fontWeight: 'bold' }}>
                 {stats.surtirCount}
               </span>
             )}
@@ -58,7 +58,7 @@ export default function Navbar({ activeTab, setActiveTab, stats, onLock }) {
           >
             <Package size={16} />
             <span>Catálogo Maestro</span>
-            <span style={{ background: '#272c3d', color: 'var(--text-muted)', padding: '2px 6px', borderRadius: '10px', fontSize: '0.7rem' }}>
+            <span style={{ background: '#1f1f1f', color: 'var(--text-muted)', padding: '2px 6px', borderRadius: '10px', fontSize: '0.7rem' }}>
               {stats.totalProducts}
             </span>
           </button>

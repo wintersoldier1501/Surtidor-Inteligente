@@ -2,10 +2,10 @@
   --font-heading: 'Cinzel', serif;
   --font-body: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
   
-  --bg-dark: #0b0f17;
-  --bg-card: #131b26;
-  --bg-card-hover: #1c2738;
-  --border-color: #243247;
+  --bg-dark: #000000;
+  --bg-card: #0d0d0d;
+  --bg-card-hover: #171717;
+  --border-color: #262626;
   
   /* Verde Esmeralda & Plata */
   --gold-primary: #34d399; /* Verde esmeralda brillante */
@@ -14,8 +14,8 @@
   --gold-glow: rgba(52, 211, 153, 0.25);
   
   --text-main: #f8fafc;
-  --text-muted: #94a3b8;
-  --text-dark: #1e293b;
+  --text-muted: #a1a1aa;
+  --text-dark: #18181b;
   
   --success: #10b981;
   --success-bg: rgba(16, 185, 129, 0.15);
@@ -30,7 +30,7 @@
   --radius-md: 14px;
   --radius-lg: 20px;
   
-  --shadow-main: 0 10px 30px -5px rgba(0, 0, 0, 0.5);
+  --shadow-main: 0 10px 30px -5px rgba(0, 0, 0, 0.8);
   --shadow-gold: 0 4px 20px rgba(52, 211, 153, 0.25);
 }
 
@@ -62,7 +62,7 @@ h1, h2, h3, h4, .brand-font {
   background: var(--bg-dark);
 }
 ::-webkit-scrollbar-thumb {
-  background: #334155;
+  background: #262626;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
@@ -108,11 +108,12 @@ h1, h2, h3, h4, .brand-font {
 }
 
 .btn-secondary {
-  background: #1e293b;
+  background: #171717;
+  border: 1px solid var(--border-color);
   color: var(--text-main);
 }
 .btn-secondary:hover {
-  background: #334155;
+  background: #262626;
 }
 
 .btn-danger {
@@ -175,7 +176,7 @@ h1, h2, h3, h4, .brand-font {
   width: 100%;
   padding: 10px 14px;
   border-radius: var(--radius-sm);
-  background: #090d14;
+  background: #000000;
   border: 1px solid var(--border-color);
   color: var(--text-main);
   font-family: var(--font-body);

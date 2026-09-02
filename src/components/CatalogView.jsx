@@ -202,7 +202,7 @@ export default function CatalogView({ products, onToggleTaller, onOpenImageModal
                 </tr>
               ) : (
                 paginatedProducts.map((item) => (
-                  <tr key={item.sku} style={{ borderBottom: '1px solid #1e2330', opacity: item.desactivado ? 0.45 : 1 }}>
+                  <tr key={item.sku} style={{ borderBottom: '1px solid var(--border-color)', opacity: item.desactivado ? 0.45 : 1 }}>
                     
                     {/* Photo thumbnail */}
                     <td style={{ padding: '12px 16px' }}>
@@ -212,7 +212,7 @@ export default function CatalogView({ products, onToggleTaller, onOpenImageModal
                           width: '40px',
                           height: '40px',
                           borderRadius: '8px',
-                          background: '#11131a',
+                          background: '#000000',
                           border: '1px solid var(--border-color)',
                           overflow: 'hidden',
                           display: 'flex',
