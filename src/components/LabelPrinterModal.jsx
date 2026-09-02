@@ -3,12 +3,14 @@ import { Tag, Printer, X, Plus, Trash2, Upload, Search, Check, AlertCircle, Refr
 import JsBarcode from 'jsbarcode';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
+import BarTenderLabelDesigner from './BarTenderLabelDesigner';
 
 export default function LabelPrinterModal({ isOpen, onClose, initialProducts = [], allProducts = [] }) {
   const [printQueue, setPrintQueue] = useState([]);
   const [activeTab, setActiveTab] = useState('queue'); // 'queue', 'excel', 'search'
   const [searchQuery, setSearchQuery] = useState('');
   const [excelMsg, setExcelMsg] = useState(null);
+  const [showDesigner, setShowDesigner] = useState(false);
 
   // Initialize print queue when opened with initialProducts from Surtidor
   useEffect(() => {
@@ -311,6 +313,11 @@ export default function LabelPrinterModal({ isOpen, onClose, initialProducts = [
         </div>
 
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <button className="btn btn-gold" onClick={() => setShowDesigner(true)} style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)' }}>
+            <RefreshCw size={16} />
+            <span>🎨 Diseñador BarTender / LabelJoy</span>
+          </button>
+
           <button className="btn btn-gold" onClick={handleGeneratePDF} disabled={activeQueue.length === 0} title="Genera un PDF con tamaño 63x11mm por hoja">
             <Printer size={16} />
             <span>📄 Generar PDF (63x11mm)</span>
@@ -648,6 +655,14 @@ export default function LabelPrinterModal({ isOpen, onClose, initialProducts = [
           ))
         )}
       </div>
+
+      {/* BarTender Visual Studio Designer Modal */}
+      <BarTenderLabelDesigner
+        isOpen={showDesigner}
+        onClose={() => setShowDesigner(false)}
+        sampleProduct={activeQueue[0] || allProducts[0]}
+        allProducts={allProducts}
+      />
 
     </div>
   );
