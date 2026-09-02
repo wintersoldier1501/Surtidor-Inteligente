@@ -343,17 +343,17 @@ export default function LabelPrinterModal({ isOpen, onClose, initialProducts = [
         // Total Printable Head is 32mm wide (0 to 256 dots).
         // Long adhesive tail from 32mm to 63mm (256 to 504 dots) is left COMPLETELY BLANK!
 
-        // 1. Left Half of Printable Head (0 to 16mm): Product Name (max 9 chars/line) + SKU
+        // 1. Left Half of Printable Head (0 to 16mm): Product Name (compact 11 chars/line) + SKU
         const words = nameEscaped.toUpperCase().replace(/-/g, ' ').split(/\s+/).filter(Boolean);
         let lines = [];
         let cur = "";
 
         words.forEach(w => {
-          if ((cur + " " + w).trim().length <= 9) {
+          if ((cur + " " + w).trim().length <= 11) {
             cur = (cur + " " + w).trim();
           } else {
             if (cur) lines.push(cur);
-            cur = w.length > 9 ? w.substring(0, 9) : w;
+            cur = w.length > 11 ? w.substring(0, 11) : w;
           }
         });
         if (cur) lines.push(cur);
@@ -363,7 +363,7 @@ export default function LabelPrinterModal({ isOpen, onClose, initialProducts = [
         leftLines.push(skuLeftFormatted);
 
         leftLines.forEach((l, idx) => {
-          const yPos = 4 + (idx * 16);
+          const yPos = 4 + (idx * 15);
           tspl += `TEXT 10,${yPos},"1",0,1,1,"${l}"\r\n`;
         });
 
