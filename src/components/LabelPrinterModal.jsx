@@ -277,13 +277,36 @@ export default function LabelPrinterModal({ isOpen, onClose, initialProducts = [
 
       tspl += `CLS\r\n`;
       if (item.formato === 'vertical') {
-        tspl += `TEXT 120,80,"3",90,1,1,"${skuEscaped}  $${item.precio}"\r\n`;
-        tspl += `TEXT 360,80,"3",90,1,1,"${skuEscaped}  $${item.precio}"\r\n`;
+        // Aretes double 90° format:
+        tspl += `TEXT 110,75,"2",90,1,1,"${skuEscaped}  $${item.precio}"\r\n`;
+        tspl += `BAR 245,4,2,80\r\n`;
+        tspl += `TEXT 360,75,"2",90,1,1,"${skuEscaped}  $${item.precio}"\r\n`;
       } else {
-        tspl += `TEXT 10,10,"2",0,1,1,"${nameEscaped.substring(0, 25)}"\r\n`;
-        tspl += `TEXT 350,10,"3",0,1,1,"$ ${item.precio}.00"\r\n`;
-        tspl += `BARCODE 250,30,"128",30,1,0,2,2,"${skuEscaped}"\r\n`;
-        tspl += `TEXT 280,70,"2",0,1,1,"${skuEscaped}"\r\n`;
+        // Horizontal standard format:
+        const titleUpper = nameEscaped.toUpperCase();
+        let line1 = titleUpper;
+        let line2 = "";
+        if (titleUpper.length > 13) {
+          const lastSpace = titleUpper.lastIndexOf(' ', 13);
+          const splitIdx = lastSpace > 0 ? lastSpace : 13;
+          line1 = titleUpper.substring(0, splitIdx);
+          line2 = titleUpper.substring(splitIdx).trim();
+        }
+
+        if (line2) {
+          tspl += `TEXT 10,12,"2",0,1,1,"${line1.substring(0, 13)}"\r\n`;
+          tspl += `TEXT 10,44,"2",0,1,1,"${line2.substring(0, 13)}"\r\n`;
+        } else {
+          tspl += `TEXT 10,28,"2",0,1,1,"${line1.substring(0, 13)}"\r\n`;
+        }
+
+        // Vertical divider line:
+        tspl += `BAR 190,4,2,80\r\n`;
+
+        // Right Box: Price ($), Barcode Code128, SKU
+        tspl += `TEXT 340,6,"3",0,1,1,"$ ${item.precio}.00"\r\n`;
+        tspl += `BARCODE 215,34,"128",26,0,0,2,2,"${skuEscaped}"\r\n`;
+        tspl += `TEXT 300,66,"2",0,1,1,"${skuEscaped}"\r\n`;
       }
       tspl += `PRINT ${copies},1\r\n`;
     });
