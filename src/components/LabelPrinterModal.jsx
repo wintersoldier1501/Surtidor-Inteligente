@@ -11,6 +11,8 @@ export default function LabelPrinterModal({ isOpen, onClose, initialProducts = [
   const [searchQuery, setSearchQuery] = useState('');
   const [excelMsg, setExcelMsg] = useState(null);
   const [showDesigner, setShowDesigner] = useState(false);
+  const [serialPort, setSerialPort] = useState(null);
+  const [hardwareStatus, setHardwareStatus] = useState('desconectado'); // 'desconectado', 'conectado', 'error'
 
   // Initialize print queue when opened with initialProducts from Surtidor
   useEffect(() => {
@@ -262,6 +264,61 @@ export default function LabelPrinterModal({ isOpen, onClose, initialProducts = [
     document.body.removeChild(link);
   };
 
+  // Direct Hardware Printing via WebSerial Port (Zero PDF, Zero Dialog)
+  const handlePrintDirectHardware = async () => {
+    if (activeQueue.length === 0) return;
+
+    let port = serialPort;
+
+    if (!port && 'serial' in navigator) {
+      try {
+        port = await navigator.serial.requestPort();
+        await port.open({ baudRate: 9600 });
+        setSerialPort(port);
+        setHardwareStatus('conectado');
+      } catch (err) {
+        console.error('Error abriendo puerto:', err);
+        alert('Selecciona el puerto USB / COM de tu impresora Ribetec / TSC.');
+        return;
+      }
+    }
+
+    if (!port || !port.writable) {
+      alert('No se pudo conectar al puerto de la impresora. Por favor verifica la conexión USB.');
+      return;
+    }
+
+    let tspl = 'SIZE 63 mm, 11 mm\r\nGAP 3 mm, 0 mm\r\nDIRECTION 1\r\nCLS\r\n';
+
+    activeQueue.forEach(item => {
+      const copies = Math.max(1, parseInt(item.copias) || 1);
+      const nameEscaped = (item.nombre || '').replace(/"/g, '');
+      const skuEscaped = (item.sku || '').replace(/"/g, '');
+
+      tspl += `CLS\r\n`;
+      if (item.formato === 'vertical') {
+        tspl += `TEXT 120,80,"3",90,1,1,"${skuEscaped}  $${item.precio}"\r\n`;
+        tspl += `TEXT 360,80,"3",90,1,1,"${skuEscaped}  $${item.precio}"\r\n`;
+      } else {
+        tspl += `TEXT 10,10,"2",0,1,1,"${nameEscaped.substring(0, 25)}"\r\n`;
+        tspl += `TEXT 350,10,"3",0,1,1,"$ ${item.precio}.00"\r\n`;
+        tspl += `BARCODE 250,30,"128",30,1,0,2,2,"${skuEscaped}"\r\n`;
+        tspl += `TEXT 280,70,"2",0,1,1,"${skuEscaped}"\r\n`;
+      }
+      tspl += `PRINT ${copies},1\r\n`;
+    });
+
+    try {
+      const encoder = new TextEncoder();
+      const writer = port.writable.getWriter();
+      await writer.write(encoder.encode(tspl));
+      writer.releaseLock();
+    } catch (err) {
+      console.error('Error enviando datos a la impresora:', err);
+      alert('Error enviando datos a la impresora. Verifica el cable USB.');
+    }
+  };
+
   // Trigger Native Browser Print Dialog
   const handlePrint = () => {
     window.print();
@@ -313,19 +370,25 @@ export default function LabelPrinterModal({ isOpen, onClose, initialProducts = [
         </div>
 
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <button
+            className="btn btn-gold"
+            onClick={handlePrintDirectHardware}
+            disabled={activeQueue.length === 0}
+            style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', boxShadow: '0 0 14px rgba(16, 185, 129, 0.4)' }}
+            title="Imprime directamente a la impresora física Ribetec RT-420ME por USB (SIN ventanas ni PDF)"
+          >
+            <Printer size={18} />
+            <span>🖨️ IMPRIMIR DIRECTO A RIBETEC (USB)</span>
+          </button>
+
           <button className="btn btn-gold" onClick={() => setShowDesigner(true)} style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)' }}>
             <RefreshCw size={16} />
             <span>🎨 Diseñador BarTender / LabelJoy</span>
           </button>
 
-          <button className="btn btn-gold" onClick={handleGeneratePDF} disabled={activeQueue.length === 0} title="Genera un PDF con tamaño 63x11mm por hoja">
+          <button className="btn btn-outline" onClick={handleGeneratePDF} disabled={activeQueue.length === 0} title="Genera un PDF con tamaño 63x11mm por hoja">
             <Printer size={16} />
-            <span>📄 Generar PDF (63x11mm)</span>
-          </button>
-
-          <button className="btn btn-outline" onClick={handleGenerateTSPL} disabled={activeQueue.length === 0} title="Descarga código térmico nativo para enviar directo a la impresora">
-            <Upload size={16} />
-            <span>⚡ Comando Térmico TSPL (.prn)</span>
+            <span>📄 PDF</span>
           </button>
 
           <button
