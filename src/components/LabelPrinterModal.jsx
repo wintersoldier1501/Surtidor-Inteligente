@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Tag, Printer, X, Plus, Trash2, Upload, Search, Check, AlertCircle, RefreshCw } from 'lucide-react';
 import JsBarcode from 'jsbarcode';
 import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
 
 export default function LabelPrinterModal({ isOpen, onClose, initialProducts = [], allProducts = [] }) {
   const [printQueue, setPrintQueue] = useState([]);
@@ -145,6 +146,92 @@ export default function LabelPrinterModal({ isOpen, onClose, initialProducts = [
   // Total Labels Count for Active Selected Queue
   const totalLabelsToPrint = activeQueue.reduce((acc, item) => acc + (parseInt(item.copias) || 1), 0);
 
+  // Generate Exact Vector PDF (63mm x 11mm)
+  const handleGeneratePDF = () => {
+    if (activeQueue.length === 0) return;
+
+    try {
+      const doc = new jsPDF({
+        orientation: 'landscape',
+        unit: 'mm',
+        format: [63, 11]
+      });
+
+      let pageIndex = 0;
+
+      activeQueue.forEach(item => {
+        const copies = Math.max(1, parseInt(item.copias) || 1);
+        for (let c = 0; c < copies; c++) {
+          if (pageIndex > 0) {
+            doc.addPage([63, 11], 'landscape');
+          }
+
+          if (item.formato === 'vertical') {
+            doc.setFontSize(8);
+            doc.setFont('helvetica', 'bold');
+            doc.text(`${item.sku}  $${item.precio}`, 15, 6, { angle: 90 });
+            doc.text(`${item.sku}  $${item.precio}`, 45, 6, { angle: 90 });
+          } else {
+            doc.setLineWidth(0.3);
+            doc.line(26, 0, 26, 11);
+
+            doc.setFontSize(7);
+            doc.setFont('helvetica', 'bold');
+            const splitTitle = doc.splitTextToSize((item.nombre || '').toUpperCase(), 24);
+            doc.text(splitTitle, 13, 4, { align: 'center' });
+
+            doc.setFontSize(8);
+            doc.text(`$ ${item.precio}.00`, 60, 3.5, { align: 'right' });
+            doc.setFontSize(7);
+            doc.text(item.sku, 44, 9.5, { align: 'center' });
+          }
+
+          pageIndex++;
+        }
+      });
+
+      doc.autoPrint();
+      const pdfBlob = doc.output('bloburl');
+      window.open(pdfBlob, '_blank');
+    } catch (err) {
+      console.error('PDF generation error:', err);
+    }
+  };
+
+  // Generate Native TSPL Thermal Printer Code File (.prn)
+  const handleGenerateTSPL = () => {
+    if (activeQueue.length === 0) return;
+
+    let tspl = 'SIZE 63 mm, 11 mm\r\nGAP 3 mm, 0 mm\r\nDIRECTION 1\r\nCLS\r\n';
+
+    activeQueue.forEach(item => {
+      const copies = Math.max(1, parseInt(item.copias) || 1);
+      const nameEscaped = (item.nombre || '').replace(/"/g, '');
+      const skuEscaped = (item.sku || '').replace(/"/g, '');
+
+      tspl += `CLS\r\n`;
+      if (item.formato === 'vertical') {
+        tspl += `TEXT 120,80,"3",90,1,1,"${skuEscaped}  $${item.precio}"\r\n`;
+        tspl += `TEXT 360,80,"3",90,1,1,"${skuEscaped}  $${item.precio}"\r\n`;
+      } else {
+        tspl += `TEXT 10,10,"2",0,1,1,"${nameEscaped.substring(0, 25)}"\r\n`;
+        tspl += `TEXT 350,10,"3",0,1,1,"$ ${item.precio}.00"\r\n`;
+        tspl += `BARCODE 250,30,"128",30,1,0,2,2,"${skuEscaped}"\r\n`;
+        tspl += `TEXT 280,70,"2",0,1,1,"${skuEscaped}"\r\n`;
+      }
+      tspl += `PRINT ${copies},1\r\n`;
+    });
+
+    const blob = new Blob([tspl], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `etiquetas_accesorizate_${Date.now()}.prn`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   // Trigger Native Browser Print Dialog
   const handlePrint = () => {
     window.print();
@@ -195,10 +282,15 @@ export default function LabelPrinterModal({ isOpen, onClose, initialProducts = [
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-          <button className="btn btn-gold" onClick={handlePrint} disabled={printQueue.length === 0}>
-            <Printer size={18} />
-            <span>🖨️ Imprimir {totalLabelsToPrint} Etiquetas</span>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <button className="btn btn-gold" onClick={handleGeneratePDF} disabled={activeQueue.length === 0} title="Genera un PDF con tamaño 63x11mm por hoja">
+            <Printer size={16} />
+            <span>📄 Generar PDF (63x11mm)</span>
+          </button>
+
+          <button className="btn btn-outline" onClick={handleGenerateTSPL} disabled={activeQueue.length === 0} title="Descarga código térmico nativo para enviar directo a la impresora">
+            <Upload size={16} />
+            <span>⚡ Comando Térmico TSPL (.prn)</span>
           </button>
 
           <button
