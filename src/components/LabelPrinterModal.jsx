@@ -319,6 +319,53 @@ export default function LabelPrinterModal({ isOpen, onClose, initialProducts = [
     }
   };
 
+  // WebUSB Direct Printing Attempt
+  const handleWebUSBPrint = async () => {
+    if (activeQueue.length === 0) return;
+
+    if (!('usb' in navigator)) {
+      alert('Tu navegador no soporta la API WebUSB. Usa Google Chrome o Microsoft Edge.');
+      return;
+    }
+
+    try {
+      const device = await navigator.usb.requestDevice({ filters: [] });
+      await device.open();
+      if (device.configuration === null) {
+        await device.selectConfiguration(1);
+      }
+      await device.claimInterface(0);
+
+      let tspl = 'SIZE 63 mm, 11 mm\r\nGAP 3 mm, 0 mm\r\nDIRECTION 1\r\nCLS\r\n';
+
+      activeQueue.forEach(item => {
+        const copies = Math.max(1, parseInt(item.copias) || 1);
+        const nameEscaped = (item.nombre || '').replace(/"/g, '');
+        const skuEscaped = (item.sku || '').replace(/"/g, '');
+
+        tspl += `CLS\r\n`;
+        if (item.formato === 'vertical') {
+          tspl += `TEXT 120,80,"3",90,1,1,"${skuEscaped}  $${item.precio}"\r\n`;
+          tspl += `TEXT 360,80,"3",90,1,1,"${skuEscaped}  $${item.precio}"\r\n`;
+        } else {
+          tspl += `TEXT 10,10,"2",0,1,1,"${nameEscaped.substring(0, 25)}"\r\n`;
+          tspl += `TEXT 350,10,"3",0,1,1,"$ ${item.precio}.00"\r\n`;
+          tspl += `BARCODE 250,30,"128",30,1,0,2,2,"${skuEscaped}"\r\n`;
+          tspl += `TEXT 280,70,"2",0,1,1,"${skuEscaped}"\r\n`;
+        }
+        tspl += `PRINT ${copies},1\r\n`;
+      });
+
+      const encoder = new TextEncoder();
+      const data = encoder.encode(tspl);
+      await device.transferOut(1, data);
+      alert('¡Etiquetas enviadas directamente a la impresora USB!');
+    } catch (err) {
+      console.error('Error WebUSB:', err);
+      alert('Información del puerto: ' + err.message);
+    }
+  };
+
   // Trigger Native Browser Print Dialog
   const handlePrint = () => {
     window.print();
