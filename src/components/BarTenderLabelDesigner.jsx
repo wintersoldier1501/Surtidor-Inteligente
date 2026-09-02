@@ -9,12 +9,12 @@ const PRESET_TEMPLATES = {
     id: 'rattail',
     name: '🏷️ Etiqueta Joyería (32mm + Patilla Blanco)',
     elements: [
-      { id: 'el-name', type: 'text', field: 'nombre', label: 'Nombre Producto (Izquierda)', x: 1.5, y: 0.5, w: 14.5, h: 7, fontSize: 6.5, bold: true, align: 'left', rotation: 0, autoFit: true },
-      { id: 'el-sku-left', type: 'text', field: 'sku', label: 'SKU (Izquierda)', x: 1.5, y: 7.8, w: 14.5, h: 2.8, fontSize: 6, bold: true, align: 'left' },
+      { id: 'el-name', type: 'text', field: 'nombre', label: 'Nombre Producto (Izquierda)', x: 1.2, y: 0.5, w: 14.8, h: 7, fontSize: 5.5, bold: false, align: 'left', rotation: 0, autoFit: true },
+      { id: 'el-sku-left', type: 'text', field: 'sku', label: 'SKU (Izquierda)', x: 1.2, y: 7.8, w: 14.8, h: 2.8, fontSize: 5.5, bold: false, align: 'left' },
       
-      { id: 'el-price', type: 'text', field: 'precio', label: 'Precio ($ Derecho)', x: 17.5, y: 0.5, w: 14, h: 3, fontSize: 7, bold: true, align: 'center', prefix: '$ ' },
+      { id: 'el-price', type: 'text', field: 'precio', label: 'Precio ($ Derecho)', x: 17.5, y: 0.5, w: 14, h: 3, fontSize: 6.5, bold: true, align: 'center', prefix: '$ ' },
       { id: 'el-barcode', type: 'barcode', field: 'sku', label: 'Código Barras (Derecho)', x: 16.5, y: 3.5, w: 15, h: 3.5 },
-      { id: 'el-sku-right', type: 'text', field: 'sku', label: 'SKU (Derecho)', x: 17.5, y: 7.5, w: 14, h: 2.8, fontSize: 6, bold: true, align: 'center' },
+      { id: 'el-sku-right', type: 'text', field: 'sku', label: 'SKU (Derecho)', x: 17.5, y: 7.5, w: 14, h: 2.8, fontSize: 5.5, bold: false, align: 'center' },
 
       { id: 'el-tail-blank', type: 'tail', label: 'Patilla Adhesiva (31mm Blanco)', x: 32, y: 0, w: 31, h: 11 }
     ]
@@ -23,9 +23,9 @@ const PRESET_TEMPLATES = {
     id: 'verticalAretes',
     name: '👂 Aretes / Piercings (Doble Vertical 90°)',
     elements: [
-      { id: 'el-tag1', type: 'text', field: 'sku_precio', label: 'Arete 1 (SKU + $)', x: 12, y: 1.5, w: 10, h: 8, fontSize: 8, bold: true, align: 'center', rotation: 90 },
+      { id: 'el-tag1', type: 'text', field: 'sku_precio', label: 'Arete 1 (SKU + $)', x: 12, y: 1.5, w: 10, h: 8, fontSize: 7.5, bold: false, align: 'center', rotation: 90 },
       { id: 'el-line-sep', type: 'line', x: 31.5, y: 0, w: 0.3, h: 11 },
-      { id: 'el-tag2', type: 'text', field: 'sku_precio', label: 'Arete 2 (SKU + $)', x: 42, y: 1.5, w: 10, h: 8, fontSize: 8, bold: true, align: 'center', rotation: 90 }
+      { id: 'el-tag2', type: 'text', field: 'sku_precio', label: 'Arete 2 (SKU + $)', x: 42, y: 1.5, w: 10, h: 8, fontSize: 7.5, bold: false, align: 'center', rotation: 90 }
     ]
   }
 };
@@ -41,7 +41,7 @@ export default function BarTenderLabelDesigner({
   const [elements, setElements] = useState(PRESET_TEMPLATES.rattail.elements);
   const [selectedElementId, setSelectedElementId] = useState('el-name');
   const [testProduct, setTestProduct] = useState(sampleProduct);
-  const [scale, setScale] = useState(8.5); // High-res 8.5x zoom by default so label fills the screen
+  const [scale, setScale] = useState(14.0); // Ultra HD Fit Screen 14.0x zoom by default
   const [saveSuccessMsg, setSaveSuccessMsg] = useState(false);
 
   useEffect(() => {
@@ -198,10 +198,27 @@ export default function BarTenderLabelDesigner({
     }
   };
 
-  // Get Display Value for Field
+  // Get Display Value for Field (with multiline word wrap matching TSPL physical print)
   const getFieldValue = (el, prod) => {
     const p = prod || testProduct;
-    if (el.field === 'nombre') return p.nombre || 'NOMBRE PRODUCTO';
+    if (el.field === 'nombre') {
+      const nameStr = (p.nombre || 'NOMBRE PRODUCTO').toUpperCase().replace(/-/g, ' ');
+      const words = nameStr.split(/\s+/).filter(Boolean);
+      let lines = [];
+      let cur = "";
+
+      words.forEach(w => {
+        if ((cur + " " + w).trim().length <= 11) {
+          cur = (cur + " " + w).trim();
+        } else {
+          if (cur) lines.push(cur);
+          cur = w.length > 11 ? w.substring(0, 11) : w;
+        }
+      });
+      if (cur) lines.push(cur);
+
+      return lines.slice(0, 3).join('\n');
+    }
     if (el.field === 'sku') return p.sku || 'SKU123';
     if (el.field === 'precio') return `${el.prefix || ''}${p.precioPublico || p.precio || 0}.00`;
     if (el.field === 'sku_precio') return `${p.sku || 'SKU'}  $${p.precioPublico || p.precio || 0}`;
@@ -458,11 +475,12 @@ export default function BarTenderLabelDesigner({
                     <span style={{
                       fontSize: `${el.fontSize * (scale / 2.8)}px`,
                       fontWeight: el.bold ? 'bold' : 'normal',
-                      fontFamily: 'Arial, sans-serif',
+                      fontFamily: 'monospace',
                       color: '#000000',
                       transform: el.rotation ? `rotate(-${el.rotation}deg)` : 'none',
-                      whiteSpace: 'nowrap',
-                      lineHeight: 1.1
+                      whiteSpace: 'pre-line',
+                      lineHeight: '1.15',
+                      textAlign: el.align || 'left'
                     }}>
                       {val}
                     </span>
@@ -474,6 +492,37 @@ export default function BarTenderLabelDesigner({
                 </div>
               );
             })}
+          </div>
+
+          {/* Floating Zoom Control Bar at Canvas Bottom */}
+          <div style={{
+            marginTop: '20px',
+            background: 'rgba(15, 15, 15, 0.95)',
+            border: '1px solid var(--gold-primary)',
+            borderRadius: '24px',
+            padding: '8px 24px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '16px',
+            boxShadow: '0 6px 30px rgba(0,0,0,0.8)'
+          }}>
+            <span style={{ fontSize: '0.85rem', color: 'var(--gold-primary)', fontWeight: 'bold' }}>🔍 Zoom del Lienzo:</span>
+            <input
+              type="range"
+              min="5"
+              max="25"
+              step="0.5"
+              value={scale}
+              onChange={(e) => setScale(parseFloat(e.target.value))}
+              style={{ width: '220px', accentColor: 'var(--gold-primary)', cursor: 'pointer' }}
+            />
+            <span style={{ fontSize: '0.9rem', fontWeight: 'bold', color: '#fff', minWidth: '48px' }}>{Math.round((scale / 3.5) * 100)}%</span>
+
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button onClick={() => setScale(8)} style={{ padding: '4px 10px', fontSize: '0.75rem', background: '#222', color: '#fff', border: '1px solid #444', borderRadius: '6px', cursor: 'pointer' }}>100%</button>
+              <button onClick={() => setScale(14)} style={{ padding: '4px 10px', fontSize: '0.75rem', background: 'var(--gold-primary)', color: '#000', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>Fit Pantalla (200%)</button>
+              <button onClick={() => setScale(22)} style={{ padding: '4px 10px', fontSize: '0.75rem', background: '#222', color: '#fff', border: '1px solid #444', borderRadius: '6px', cursor: 'pointer' }}>300% Ultra HD</button>
+            </div>
           </div>
 
           <div style={{ marginTop: '16px', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
@@ -626,6 +675,19 @@ export default function BarTenderLabelDesigner({
                       >
                         Grande (8.5)
                       </button>
+                    </div>
+
+                    <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <input
+                        type="checkbox"
+                        id="chkBoldToggle"
+                        checked={!!selectedElement.bold}
+                        onChange={(e) => updateElement(selectedElement.id, 'bold', e.target.checked)}
+                        style={{ accentColor: 'var(--gold-primary)', cursor: 'pointer', width: '16px', height: '16px' }}
+                      />
+                      <label htmlFor="chkBoldToggle" style={{ color: '#fff', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 'bold' }}>
+                        Texto en Negrita (Bold)
+                      </label>
                     </div>
                   </div>
 
