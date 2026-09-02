@@ -338,50 +338,41 @@ export default function LabelPrinterModal({ isOpen, onClose, initialProducts = [
   const handlePrintDirectHardware = async () => {
     if (activeQueue.length === 0) return;
 
-    let savedCustomTemplate = null;
-    try {
-      const savedStr = localStorage.getItem('accesorizate_bartender_custom_template');
-      if (savedStr) {
-        const parsed = JSON.parse(savedStr);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          savedCustomTemplate = parsed;
-        }
-      }
-    } catch (e) {}
-
-    let tspl = '';
+    let tspl = 'SIZE 63 mm, 11 mm\r\nGAP 3 mm, 0 mm\r\nDIRECTION 1\r\nCLS\r\n';
 
     activeQueue.forEach(item => {
       const copies = Math.max(1, parseInt(item.copias) || 1);
-      
-      if (savedCustomTemplate && item.formato !== 'vertical') {
-        tspl += convertElementsToTSPL(savedCustomTemplate, item, copies);
+      const skuEscaped = (item.sku || '').replace(/"/g, '').toUpperCase();
+
+      tspl += `CLS\r\n`;
+      if (item.formato === 'vertical') {
+        // Aretes double 90° format:
+        tspl += `TEXT 110,75,"2",90,1,1,"${skuEscaped}  $${item.precio}"\r\n`;
+        tspl += `BAR 245,4,2,80\r\n`;
+        tspl += `TEXT 360,75,"2",90,1,1,"${skuEscaped}  $${item.precio}"\r\n`;
       } else {
-        const skuEscaped = (item.sku || '').replace(/"/g, '').toUpperCase();
-        tspl += `CLS\r\n`;
-        if (item.formato === 'vertical') {
-          tspl += `TEXT 110,75,"2",90,1,1,"${skuEscaped}  $${item.precio}"\r\n`;
-          tspl += `BAR 245,4,2,80\r\n`;
-          tspl += `TEXT 360,75,"2",90,1,1,"${skuEscaped}  $${item.precio}"\r\n`;
-        } else {
-          const leftLines = getJewelryLeftLines(item.nombre, item.sku);
-          leftLines.forEach((l, idx) => {
-            const yPos = 4 + (idx * 15);
-            tspl += `TEXT 10,${yPos},"1",0,1,1,"${l}"\r\n`;
-          });
+        // 1. Left Half: Cleaned Product Name + SKU Line
+        const leftLines = getJewelryLeftLines(item.nombre, item.sku);
+        leftLines.forEach((l, idx) => {
+          const yPos = 4 + (idx * 15);
+          tspl += `TEXT 10,${yPos},"1",0,1,1,"${l}"\r\n`;
+        });
 
-          const priceText = `$ ${item.precio}.00`;
-          const isLongSku = skuEscaped.length > 9;
-          const barcodeX = isLongSku ? 112 : 122;
-          const skuRightX = isLongSku ? 118 : 135;
-          const priceX = isLongSku ? 128 : 138;
+        // 2. Right Half of Printable Head: Price ($), Barcode Code128, SKU
+        const priceText = `$ ${item.precio}.00`;
+        const isLongSku = skuEscaped.length > 9;
 
-          tspl += `TEXT ${priceX},4,"1",0,1,1,"${priceText}"\r\n`;
-          tspl += `BARCODE ${barcodeX},22,"128",24,0,0,1,2,"${skuEscaped.substring(0, 15)}"\r\n`;
-          tspl += `TEXT ${skuRightX},54,"1",0,1,1,"${skuEscaped.substring(0, 13)}"\r\n`;
-        }
-        tspl += `PRINT ${copies},1\r\n`;
+        const barcodeX = isLongSku ? 112 : 122;
+        const skuRightX = isLongSku ? 118 : 135;
+        const priceX = isLongSku ? 128 : 138;
+
+        tspl += `TEXT ${priceX},4,"1",0,1,1,"${priceText}"\r\n`;
+        tspl += `BARCODE ${barcodeX},22,"128",24,0,0,1,2,"${skuEscaped.substring(0, 15)}"\r\n`;
+        tspl += `TEXT ${skuRightX},54,"1",0,1,1,"${skuEscaped.substring(0, 13)}"\r\n`;
+
+        // 3. Long Adhesive Tail (32mm to 63mm): LEFT COMPLETELY BLANK!
       }
+      tspl += `PRINT ${copies},1\r\n`;
     });
 
     try {
