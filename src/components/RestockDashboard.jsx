@@ -232,20 +232,28 @@ export default function RestockDashboard({ products, onOpenImageModal, onToggleN
           className={`stat-card ${activeSubTab === 'general' ? 'active' : ''}`}
           style={{
             cursor: 'pointer',
+            padding: '22px 24px 22px 24px',
+            borderRadius: '16px',
             border: activeSubTab === 'general' ? '2px solid #34d399' : '1px solid var(--border-color)',
-            background: activeSubTab === 'general' ? 'rgba(52, 211, 153, 0.05)' : 'var(--bg-card)'
+            background: activeSubTab === 'general' ? 'rgba(52, 211, 153, 0.05)' : 'var(--bg-card)',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            transition: 'all 0.2s ease-in-out'
           }}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-            <span style={{ fontSize: '0.85rem', color: '#34d399', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              1. Almacén General
-            </span>
-            <PackageCheck color="#34d399" size={24} />
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <span style={{ fontSize: '0.85rem', color: '#34d399', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                1. Almacén General
+              </span>
+              <PackageCheck color="#34d399" size={24} />
+            </div>
+            <div style={{ fontSize: '2.4rem', fontWeight: 'bold', color: '#fff', marginBottom: '6px' }}>
+              {restockAnalysis.surtirGeneral.length} <span style={{ fontSize: '1rem', color: 'var(--text-muted)', fontWeight: 'normal' }}>piezas</span>
+            </div>
           </div>
-          <div style={{ fontSize: '2.4rem', fontWeight: 'bold', color: '#fff', marginBottom: '4px' }}>
-            {restockAnalysis.surtirGeneral.length} <span style={{ fontSize: '1rem', color: 'var(--text-muted)', fontWeight: 'normal' }}>piezas</span>
-          </div>
-          <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+          <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '10px', lineHeight: '1.4' }}>
             Listas para recoger del Almacén General en Vista Hermosa.
           </p>
         </div>
@@ -256,20 +264,28 @@ export default function RestockDashboard({ products, onOpenImageModal, onToggleN
           className={`stat-card ${activeSubTab === 'taller' ? 'active' : ''}`}
           style={{
             cursor: 'pointer',
+            padding: '22px 24px 22px 24px',
+            borderRadius: '16px',
             border: activeSubTab === 'taller' ? '2px solid #c084fc' : '1px solid var(--border-color)',
-            background: activeSubTab === 'taller' ? 'rgba(192, 132, 252, 0.05)' : 'var(--bg-card)'
+            background: activeSubTab === 'taller' ? 'rgba(192, 132, 252, 0.05)' : 'var(--bg-card)',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            transition: 'all 0.2s ease-in-out'
           }}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-            <span style={{ fontSize: '0.85rem', color: '#c084fc', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              2. Orden a Taller
-            </span>
-            <Hammer color="#c084fc" size={24} />
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <span style={{ fontSize: '0.85rem', color: '#c084fc', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                2. Orden a Taller
+              </span>
+              <Hammer color="#c084fc" size={24} />
+            </div>
+            <div style={{ fontSize: '2.4rem', fontWeight: 'bold', color: '#fff', marginBottom: '6px' }}>
+              {restockAnalysis.ordenTaller.length} <span style={{ fontSize: '1rem', color: 'var(--text-muted)', fontWeight: 'normal' }}>piezas</span>
+            </div>
           </div>
-          <div style={{ fontSize: '2.4rem', fontWeight: 'bold', color: '#fff', marginBottom: '4px' }}>
-            {restockAnalysis.ordenTaller.length} <span style={{ fontSize: '1rem', color: 'var(--text-muted)', fontWeight: 'normal' }}>piezas</span>
-          </div>
-          <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+          <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '10px', lineHeight: '1.4' }}>
             En 0 en Almacén General, pero etiquetadas como <strong>Procedencia Taller</strong>.
           </p>
         </div>
@@ -280,24 +296,31 @@ export default function RestockDashboard({ products, onOpenImageModal, onToggleN
           className={`stat-card ${activeSubTab === 'agotados' ? 'active' : ''}`}
           style={{
             cursor: 'pointer',
+            padding: '22px 24px 22px 24px',
+            borderRadius: '16px',
             border: activeSubTab === 'agotados' ? '2px solid #f87171' : '1px solid var(--border-color)',
-            background: activeSubTab === 'agotados' ? 'rgba(248, 113, 113, 0.05)' : 'var(--bg-card)'
+            background: activeSubTab === 'agotados' ? 'rgba(248, 113, 113, 0.05)' : 'var(--bg-card)',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            transition: 'all 0.2s ease-in-out'
           }}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-            <span style={{ fontSize: '0.85rem', color: '#f87171', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              3. Agotados Proveedor
-            </span>
-            <AlertTriangle color="#f87171" size={24} />
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <span style={{ fontSize: '0.85rem', color: '#f87171', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                3. Agotados Proveedor
+              </span>
+              <AlertTriangle color="#f87171" size={24} />
+            </div>
+            <div style={{ fontSize: '2.4rem', fontWeight: 'bold', color: '#fff', marginBottom: '6px' }}>
+              {restockAnalysis.agotados.length} <span style={{ fontSize: '1rem', color: 'var(--text-muted)', fontWeight: 'normal' }}>piezas</span>
+            </div>
           </div>
-          <div style={{ fontSize: '2.4rem', fontWeight: 'bold', color: '#fff', marginBottom: '4px' }}>
-            {restockAnalysis.agotados.length} <span style={{ fontSize: '1rem', color: 'var(--text-muted)', fontWeight: 'normal' }}>piezas</span>
-          </div>
-          <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+          <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '10px', lineHeight: '1.4' }}>
             En 0 en Almacén General (requiere pedido a Proveedor).
           </p>
         </div>
-
       </div>
 
       {/* Main Table Content */}
