@@ -877,25 +877,32 @@ export default function LabelPrinterModal({ isOpen, onClose, initialProducts = [
               <p style={{ fontSize: '0.85rem', marginTop: '6px' }}>Agrega productos desde la pestaña "Buscar Catálogo" o carga un Excel.</p>
             </div>
           ) : (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', justifyContent: 'center', width: '100%', paddingBottom: '40px' }}>
-              {activeQueue.flatMap((item, idx) =>
-                Array.from({ length: Math.max(1, parseInt(item.copias) || 1) }).map((_, cIdx) => ({
-                  ...item,
-                  parentIdx: idx + 1,
-                  copyNumber: cIdx + 1,
-                  totalCopies: Math.max(1, parseInt(item.copias) || 1)
-                }))
-              ).map((itemCopy, globalIdx) => (
-                <div key={`${itemCopy.sku}-${globalIdx}`} style={{ background: '#111', padding: '12px', borderRadius: '10px', border: '1px solid var(--gold-primary)' }}>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--gold-primary)', marginBottom: '8px', fontWeight: 'bold', display: 'flex', justifyContent: 'space-between' }}>
-                    <span>Etiqueta #{globalIdx + 1} • {itemCopy.sku} (Copia {itemCopy.copyNumber}/{itemCopy.totalCopies})</span>
-                    <span>🏷️ Estándar</span>
-                  </div>
-
-                  {/* Exact 63mm x 11mm Label Simulation Frame (Scaled 6.5x for screen clarity) */}
-                  <SingleLabelPreview item={itemCopy} scale={6.5} />
-                </div>
-              ))}
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              background: '#141414',
+              padding: '16px',
+              borderRadius: '12px',
+              border: '1px solid #262626',
+              boxShadow: '0 10px 30px rgba(0,0,0,0.8)',
+              paddingBottom: '30px'
+            }}>
+              <div style={{ fontSize: '0.78rem', color: 'var(--gold-primary)', fontWeight: 'bold', marginBottom: '12px', letterSpacing: '0.5px' }}>
+                📜 ROLLO CONTINUO DE ETIQUETAS RIBETEC
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', border: '1px solid #333', borderRadius: '4px', overflow: 'hidden' }}>
+                {activeQueue.flatMap((item, idx) =>
+                  Array.from({ length: Math.max(1, parseInt(item.copias) || 1) }).map((_, cIdx) => ({
+                    ...item,
+                    parentIdx: idx + 1,
+                    copyNumber: cIdx + 1,
+                    totalCopies: Math.max(1, parseInt(item.copias) || 1)
+                  }))
+                ).map((itemCopy, globalIdx) => (
+                  <SingleLabelPreview key={`${itemCopy.sku}-${globalIdx}`} item={itemCopy} scale={6.5} />
+                ))}
+              </div>
             </div>
           )}
 
@@ -1018,24 +1025,26 @@ function SingleLabelPreview({ item, scale = 3.2 }) {
           </div>
         </div>
       ) : (
-        /* FORMAT A: Horizontal Rat-Tail Jewelry Flag Label (32mm Printable Head + 31mm Blank Right Tail) */
+        /* FORMAT A: Horizontal Rat-Tail Jewelry Flag Label (26mm Left Head + 16mm Barcode Box + 21mm Adhesive Tail) */
         <div style={{ width: '100%', height: '100%', display: 'flex' }}>
-          {/* Left Box (16mm / 26% width): Product Name + SKU */}
+          {/* Left Box (26mm / 41% width): Clean word lines centered + 1.5px solid black divider line */}
           <div style={{
-            width: '26%',
+            width: '41%',
             height: '100%',
-            padding: '2px 3px',
+            borderRight: '1.5px solid #000000',
+            padding: '2px 4px',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'center',
             alignItems: 'center',
             textAlign: 'center',
-            fontSize: '5.8px',
-            fontWeight: 'normal',
+            fontSize: '11px',
+            fontWeight: 'bold',
             lineHeight: '1.15',
             textTransform: 'uppercase',
             fontFamily: 'monospace',
-            whiteSpace: 'pre-line'
+            whiteSpace: 'pre-line',
+            boxSizing: 'border-box'
           }}>
             {getJewelryLeftLines(item.nombre, item.sku).join('\n')}
           </div>
@@ -1048,24 +1057,26 @@ function SingleLabelPreview({ item, scale = 3.2 }) {
             flexDirection: 'column',
             justifyContent: 'space-around',
             alignItems: 'center',
-            padding: '1px 2px'
+            padding: '1px 4px',
+            boxSizing: 'border-box'
           }}>
-            <div style={{ fontWeight: 'bold', fontSize: '8px' }}>${item.precio}.00</div>
-            <svg ref={barcodeRef} style={{ width: '90%', height: '14px' }}></svg>
-            <div style={{ fontFamily: 'monospace', fontSize: '6.5px', fontWeight: 'bold' }}>{item.sku}</div>
+            <div style={{ width: '100%', textAlign: 'right', fontWeight: 'bold', fontSize: '13px', fontFamily: 'Arial, sans-serif' }}>${item.precio}.00</div>
+            <svg ref={barcodeRef} style={{ width: '92%', height: '22px' }}></svg>
+            <div style={{ fontFamily: 'monospace', fontSize: '11px', fontWeight: 'bold' }}>{item.sku}</div>
           </div>
 
-          {/* Long Right Adhesive Tail (31mm / 48% width): COMPLETELY BLANK */}
+          {/* Long Right Adhesive Tail (21mm / 33% width): COMPLETELY BLANK */}
           <div style={{
-            width: '48%',
+            width: '33%',
             height: '100%',
-            background: 'rgba(0, 0, 0, 0.03)',
-            borderLeft: '1px dashed #ddd',
+            background: 'rgba(0, 0, 0, 0.02)',
+            borderLeft: '1px dashed #cbd5e1',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: '#aaa',
-            fontSize: '7px'
+            color: '#94a3b8',
+            fontSize: '10px',
+            fontStyle: 'italic'
           }}>
             (Patilla Adhesiva)
           </div>
