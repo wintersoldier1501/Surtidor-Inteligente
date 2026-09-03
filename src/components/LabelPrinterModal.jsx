@@ -537,10 +537,10 @@ export default function LabelPrinterModal({ isOpen, onClose, initialProducts = [
       <div className="no-print" style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
         
         {/* Left Sidebar: Controls & Product Search / Excel Upload */}
-        <div style={{ width: '400px', borderRight: '1px solid var(--border-color)', background: '#050505', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ width: '400px', borderRight: '1px solid var(--border-color)', background: '#050505', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
           
           {/* Sub-tabs */}
-          <div style={{ display: 'flex', borderBottom: '1px solid var(--border-color)', background: '#0a0a0a' }}>
+          <div style={{ display: 'flex', borderBottom: '1px solid var(--border-color)', background: '#0a0a0a', flexShrink: 0 }}>
             <button
               onClick={() => setActiveTab('queue')}
               style={{
@@ -593,7 +593,7 @@ export default function LabelPrinterModal({ isOpen, onClose, initialProducts = [
 
           {/* Tab 1: Queue Actions */}
           {activeTab === 'queue' && (
-            <div style={{ padding: '16px', flex: 1, overflowY: 'auto' }}>
+            <div style={{ padding: '16px', flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                 <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
                   Imprimir: <strong style={{ color: 'var(--gold-primary)' }}>{activeQueue.length} de {printQueue.length}</strong> ({totalLabelsToPrint} copias)
@@ -635,7 +635,7 @@ export default function LabelPrinterModal({ isOpen, onClose, initialProducts = [
                   <p style={{ fontSize: '0.8rem', marginTop: '6px' }}>Busca productos del catálogo o carga un Excel para generar tus etiquetas libremente.</p>
                 </div>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '10px', paddingRight: '4px' }}>
                   {printQueue.map((item, idx) => (
                     <div
                       key={idx}
@@ -707,8 +707,8 @@ export default function LabelPrinterModal({ isOpen, onClose, initialProducts = [
 
           {/* Tab 2: Catalog Search */}
           {activeTab === 'search' && (
-            <div style={{ padding: '16px', flex: 1, display: 'flex', flexDirection: 'column' }}>
-              <div style={{ marginBottom: '14px' }}>
+            <div style={{ padding: '16px', flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' }}>
+              <div style={{ marginBottom: '14px', flexShrink: 0 }}>
                 <input
                   type="text"
                   placeholder="Buscar por SKU o Descripción..."
@@ -719,7 +719,7 @@ export default function LabelPrinterModal({ isOpen, onClose, initialProducts = [
                 />
               </div>
 
-              <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px', paddingRight: '4px' }}>
                 {!searchQuery.trim() ? (
                   <p style={{ color: 'var(--text-muted)', fontSize: '0.82rem', textAlign: 'center', marginTop: '20px' }}>
                     Escribe un código (ej: AX010G) o nombre para agregar productos.
@@ -766,7 +766,7 @@ export default function LabelPrinterModal({ isOpen, onClose, initialProducts = [
 
           {/* Tab 3: Excel Upload & Selective Picker */}
           {activeTab === 'excel' && (
-            <div style={{ padding: '16px', flex: 1, display: 'flex', flexDirection: 'column' }}>
+            <div style={{ padding: '16px', flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' }}>
               <div style={{
                 border: '1.5px dashed var(--border-color)',
                 borderRadius: '10px',
