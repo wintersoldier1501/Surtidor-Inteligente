@@ -867,26 +867,33 @@ export default function LabelPrinterModal({ isOpen, onClose, initialProducts = [
         <div style={{ flex: 1, padding: '24px', overflowY: 'auto', background: '#000000', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           
           <div style={{ marginBottom: '16px', color: 'var(--text-muted)', fontSize: '0.85rem', textAlign: 'center' }}>
-            VISTA PREVIA EN PANTALLA (MEDIDA EXACTA 63mm x 11mm PARA RIBETEC RT-420ME / TSC T-200)
+            VISTA PREVIA DE ETIQUETAS A IMPRIMIR ({totalLabelsToPrint} {totalLabelsToPrint === 1 ? 'etiqueta total' : 'etiquetas totales'} • MEDIDA 63x11mm)
           </div>
 
           {activeQueue.length === 0 ? (
             <div style={{ margin: 'auto', textAlign: 'center', color: 'var(--text-muted)' }}>
               <Printer size={64} style={{ opacity: 0.2, marginBottom: '16px' }} />
-              <p style={{ fontSize: '1.1rem' }}>No hay etiquetas seleccionadas para vista previa o impresión.</p>
-              <p style={{ fontSize: '0.85rem', marginTop: '6px' }}>Marca las casillas ☑️ de las etiquetas que deseas imprimir en el panel izquierdo.</p>
+              <p style={{ fontSize: '1.1rem' }}>No hay etiquetas en la lista para vista previa o impresión.</p>
+              <p style={{ fontSize: '0.85rem', marginTop: '6px' }}>Agrega productos desde la pestaña "Buscar Catálogo" o carga un Excel.</p>
             </div>
           ) : (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', justifyContent: 'center' }}>
-              {activeQueue.map((item, idx) => (
-                <div key={idx} style={{ background: '#111', padding: '12px', borderRadius: '10px', border: '1px solid var(--gold-primary)' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', justifyContent: 'center', width: '100%', paddingBottom: '40px' }}>
+              {activeQueue.flatMap((item, idx) =>
+                Array.from({ length: Math.max(1, parseInt(item.copias) || 1) }).map((_, cIdx) => ({
+                  ...item,
+                  parentIdx: idx + 1,
+                  copyNumber: cIdx + 1,
+                  totalCopies: Math.max(1, parseInt(item.copias) || 1)
+                }))
+              ).map((itemCopy, globalIdx) => (
+                <div key={`${itemCopy.sku}-${globalIdx}`} style={{ background: '#111', padding: '12px', borderRadius: '10px', border: '1px solid var(--gold-primary)' }}>
                   <div style={{ fontSize: '0.75rem', color: 'var(--gold-primary)', marginBottom: '8px', fontWeight: 'bold', display: 'flex', justifyContent: 'space-between' }}>
-                    <span>Etiqueta {idx + 1} ({item.copias} {item.copias === 1 ? 'copia' : 'copias'})</span>
-                    <span>{item.formato === 'vertical' ? '👂 Vertical Aretes' : '🏷️ Estándar'}</span>
+                    <span>Etiqueta #{globalIdx + 1} • {itemCopy.sku} (Copia {itemCopy.copyNumber}/{itemCopy.totalCopies})</span>
+                    <span>🏷️ Estándar</span>
                   </div>
 
                   {/* Exact 63mm x 11mm Label Simulation Frame (Scaled 6.5x for screen clarity) */}
-                  <SingleLabelPreview item={item} scale={6.5} />
+                  <SingleLabelPreview item={itemCopy} scale={6.5} />
                 </div>
               ))}
             </div>
