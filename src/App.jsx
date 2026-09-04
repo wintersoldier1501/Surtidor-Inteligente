@@ -15,7 +15,7 @@ const UNLOCKED_KEY = 'accesorizate_pin_unlocked_v1';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('surtidor'); // 'surtidor', 'catalogo', 'taller', 'importar'
-  const [isUnlocked, setIsUnlocked] = useState(() => localStorage.getItem(UNLOCKED_KEY) === 'true');
+  const [isUnlocked, setIsUnlocked] = useState(true);
   const isRemoteUpdateRef = useRef(false);
 
   const [products, setProducts] = useState(() => {
@@ -307,22 +307,6 @@ export default function App() {
     return { totalProducts, tallerCount, surtirCount };
   }, [products]);
 
-  const handleLock = () => {
-    localStorage.removeItem(UNLOCKED_KEY);
-    setIsUnlocked(false);
-  };
-
-  if (!isUnlocked) {
-    return (
-      <PinLockModal
-        onUnlock={() => {
-          localStorage.setItem(UNLOCKED_KEY, 'true');
-          setIsUnlocked(true);
-        }}
-      />
-    );
-  }
-
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       
@@ -331,7 +315,6 @@ export default function App() {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         stats={stats}
-        onLock={handleLock}
       />
 
       {/* Main View Container */}
